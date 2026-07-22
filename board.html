@@ -1,0 +1,2570 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>旅游资讯看板</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: #f5f7fa; color: #333; padding: 20px; }
+    .container { max-width: 1200px; margin: 0 auto; }
+    header { margin-bottom: 24px; }
+    h1 { font-size: 28px; color: #1a1a1a; margin-bottom: 4px; }
+    .subtitle { font-size: 14px; color: #666; margin-bottom: 8px; }
+    .update-time { font-size: 12px; color: #999; }
+    .search-bar { display: flex; gap: 8px; margin-bottom: 20px; }
+    .search-bar input { flex: 1; padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; outline: none; }
+    .search-bar input:focus { border-color: #409eff; }
+    .stats { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+    .stat-card { background: #fff; padding: 12px 16px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); font-size: 13px; color: #666; cursor: pointer; transition: all 0.15s; }
+    .stat-card:hover { box-shadow: 0 2px 6px rgba(0,0,0,0.08); transform: translateY(-1px); }
+    .stat-card.active { border: 2px solid #2a7fff; background: #e3f2fd; color: #2a7fff; }
+    .stat-card.active b { color: #2a7fff; }
+    .stat-card b { color: #333; font-size: 16px; display: block; margin-bottom: 2px; }
+    .sub-stat { padding: 8px 12px; font-size: 12px; }
+    .sub-stat b { font-size: 14px; }
+    .stat-plain { cursor: default; background: #fafbfc; border: 1px solid #eee; }
+    .stat-plain:hover { transform: none; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .table-wrap { background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th { background: #fafbfc; padding: 12px 16px; text-align: left; font-weight: 600; color: #555; border-bottom: 1px solid #eee; font-size: 13px; }
+    td { padding: 14px 16px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    .title-cell { max-width: 400px; }
+    .title-main { font-weight: 500; color: #1a1a1a; line-height: 1.4; margin-bottom: 4px; }
+    .title-sub { font-size: 12px; color: #888; line-height: 1.4; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+    .badge-carnoc { background: #e6f2ff; color: #2a7fff; }
+    .badge-loyalty { background: #f0e6ff; color: #7a2aff; }
+    .badge-eq-domestic { background: #fff3e0; color: #e65100; }
+    .badge-eq-intl { background: #ffebee; color: #c62828; }
+    .badge-embassy { background: #e8f5e9; color: #2e7d32; }
+    .badge-cmb { background: #fce4ec; color: #c2185b; }
+    .badge-citic { background: #e3f2fd; color: #1565c0; }
+    .badge-rail { background: #e8f5e9; color: #2e7d32; }
+    .badge-xhs-laoya { background: #fff3e0; color: #e65100; }
+    .badge-xhs-xiyou { background: #e0f2f1; color: #00695c; }
+    .badge-xhs-congtou { background: #fce4ec; color: #c2185b; }
+    .badge-xhs-tuzi { background: #e8eaf6; color: #303f9f; }
+    .badge-bocom { background: #fff3e0; color: #e65100; }
+    .badge-xhs { background: #ffebee; color: #d32f2f; }
+    .source-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; padding: 3px 8px; border-radius: 4px; }
+    .source-carnoc { background: #e6f2ff; color: #2a7fff; }
+    .source-loyalty { background: #f0e6ff; color: #7a2aff; }
+    .source-ceic { background: #fff3e0; color: #e65100; }
+    .source-embassy { background: #e8f5e9; color: #2e7d32; }
+    .source-cmb { background: #fce4ec; color: #c2185b; }
+    .source-citic { background: #e3f2fd; color: #1565c0; }
+    .source-rail { background: #e8f5e9; color: #2e7d32; }
+    .source-xhs-laoya { background: #fff3e0; color: #e65100; }
+    .source-xhs-xiyou { background: #e0f2f1; color: #00695c; }
+    .source-xhs-congtou { background: #fce4ec; color: #c2185b; }
+    .source-xhs-tuzi { background: #e8eaf6; color: #303f9f; }
+    .source-bocom { background: #fff3e0; color: #e65100; }
+    .source-xhs { background: #ffebee; color: #d32f2f; }
+    .time-cell { font-size: 13px; color: #888; white-space: nowrap; }
+    .actions { display: flex; gap: 8px; }
+    .btn { padding: 6px 12px; border-radius: 6px; font-size: 12px; border: none; cursor: pointer; text-decoration: none; display: inline-block; }
+    .btn-view { background: #f0f0f0; color: #555; }
+    .btn-view:hover { background: #e0e0e0; }
+    .btn-del { background: #ffebee; color: #c62828; }
+    .btn-del:hover { background: #ffcdd2; }
+    .pagination { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-top: 1px solid #f0f0f0; flex-wrap: wrap; gap: 10px; }
+    .page-size { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #666; }
+    .page-size select { padding: 4px 8px; border-radius: 4px; border: 1px solid #ddd; font-size: 13px; }
+    .page-info { font-size: 13px; color: #888; }
+    .page-btns { display: flex; gap: 4px; }
+    .page-btn { padding: 6px 12px; border: 1px solid #ddd; background: #fff; border-radius: 6px; cursor: pointer; font-size: 13px; color: #555; }
+    .page-btn:hover { background: #f5f7fa; }
+    .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .page-btn.active { background: #2a7fff; color: #fff; border-color: #2a7fff; }
+    .empty { padding: 40px; text-align: center; color: #999; font-size: 14px; }
+    .tag { display: inline-block; font-size: 11px; padding: 2px 6px; border-radius: 3px; margin-top: 4px; }
+    .content-preview { font-size: 12px; color: #999; margin-top: 4px; line-height: 1.3; max-width: 400px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>旅游资讯看板</h1>
+      <div class="subtitle">民航新闻 · 常旅客资讯 · 地震快讯 · 历史存档可搜索</div>
+      <div class="update-time">更新时间：2026-06-21 12:30</div>
+    </header>
+
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="搜索标题、关键词..." oninput="render()">
+    </div>
+
+    <div class="stats" id="stats"></div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>标题</th>
+            <th>来源</th>
+            <th>类型</th>
+            <th>时间</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+      <div class="pagination" id="pagination"></div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      const SEED_DATA = [
+
+  {
+    "id": "carnoc_662758",
+    "title": "宁夏飞香港航班两乘客爆发激烈冲突 警方登机处理！",
+    "href": "http://news.carnoc.com/list/662/662758.html",
+    "source": "CARNOC",
+    "sourceLabel": "✈️ 民航资源网",
+    "category": "民航新闻",
+    "sortTime": "2026-07-08",
+    "author": ""
+  },
+  {
+    "id": "carnoc_662752",
+    "title": "吉尔吉斯斯坦一架MD-83起飞时起落架坍塌 多名旅客受伤！",
+    "href": "http://news.carnoc.com/list/662/662752.html",
+    "source": "CARNOC",
+    "sourceLabel": "✈️ 民航资源网",
+    "category": "民航新闻",
+    "sortTime": "2026-07-08",
+    "author": ""
+  },
+  {
+    "id": "carnoc_662750",
+    "title": "大韩航空员工将加薪2.5%，每人另发200万韩元特别奖金",
+    "href": "http://news.carnoc.com/list/662/662750.html",
+    "source": "CARNOC",
+    "sourceLabel": "✈️ 民航资源网",
+    "category": "民航新闻",
+    "sortTime": "2026-07-08",
+    "author": ""
+  },
+  {
+    "id": "carnoc_662730",
+    "title": "巴基斯坦一架737飞机失联",
+    "href": "http://news.carnoc.com/list/662/662730.html",
+    "source": "CARNOC",
+    "sourceLabel": "✈️ 民航资源网",
+    "category": "民航新闻",
+    "sortTime": "2026-07-08",
+    "author": ""
+  },
+  {
+    "id": "ll_20260708_01",
+    "title": "凯悦将更多酒店排除在套房升级奖励之外",
+    "originalTitle": "Hyatt Excludes More Properties From Suite Upgrade Awards",
+    "href": "https://loyaltylobby.com/",
+    "source": "LOYALTYLOBBY",
+    "sourceLabel": "🌐 LoyaltyLobby",
+    "category": "凯悦",
+    "brandTag": "凯悦",
+    "sortTime": "2026-07-08",
+    "author": "John Ollila"
+  },
+  {
+    "id": "ll_20260708_02",
+    "title": "IHG中东、非洲、印度及南亚36小时住宿促销（至9月6日）",
+    "originalTitle": "IHG 36-Hour Stay For Middle East, Africa, India & South Asia Until September 6, 2026",
+    "href": "https://loyaltylobby.com/",
+    "source": "LOYALTYLOBBY",
+    "sourceLabel": "🌐 LoyaltyLobby",
+    "category": "IHG",
+    "brandTag": "IHG",
+    "sortTime": "2026-07-08",
+    "author": "John Ollila"
+  },
+  {
+    "id": "ll_20260708_03",
+    "title": "万豪Bonvoy积分闪电贬值5%-10%",
+    "originalTitle": "Marriott Bonvoy 5% To 10% Flash Points Devaluation",
+    "href": "https://loyaltylobby.com/",
+    "source": "LOYALTYLOBBY",
+    "sourceLabel": "🌐 LoyaltyLobby",
+    "category": "万豪",
+    "brandTag": "万豪",
+    "sortTime": "2026-07-08",
+    "author": "John Ollila"
+  },
+  {
+    "id": "ll_20260708_04",
+    "title": "Mass Cancellation Of Approved U.S. ESTA (Wisa Waiver) Applications During Worldcup?",
+    "originalTitle": "Mass Cancellation Of Approved U.S. ESTA (Wisa Waiver) Applications During Worldcup?",
+    "href": "https://loyaltylobby.com/",
+    "source": "LOYALTYLOBBY",
+    "sourceLabel": "🌐 LoyaltyLobby",
+    "category": "海外航旅资讯",
+    "brandTag": "海外航旅资讯",
+    "sortTime": "2026-07-08",
+    "author": "John Ollila"
+  },
+  {
+    "id": "ll_20260708_05",
+    "title": "IHG优悦会7月积分奖励及房价促销更新",
+    "originalTitle": "IHG One Rewards Bonus Points & Rate Promotions Update July 2026",
+    "href": "https://loyaltylobby.com/",
+    "source": "LOYALTYLOBBY",
+    "sourceLabel": "🌐 LoyaltyLobby",
+    "category": "IHG",
+    "brandTag": "IHG",
+    "sortTime": "2026-07-08",
+    "author": "John Ollila"
+  },
+  {
+    "id": "ll_20260708_06",
+    "title": "卡塔尔航空Avios双倍积分及最高9折优惠（出行至12月15日，7月15日前预订）",
+    "originalTitle": "Qatar Airways Double Avios & Up To 10% Off For Travel Through December 15, 2026 (Book By July 15)",
+    "href": "https://loyaltylobby.com/",
+    "source": "LOYALTYLOBBY",
+    "sourceLabel": "🌐 LoyaltyLobby",
+    "category": "卡塔尔",
+    "brandTag": "卡塔尔",
+    "sortTime": "2026-07-08",
+    "author": "John Ollila"
+  },
+  {
+    "id": "ll_20260708_07",
+    "title": "雅高ALL Accor+ Explorer推荐好友促销（7月6日-8月28日）",
+    "originalTitle": "ALL Accor+ Explorer Refer-a-Friend Promotion July 6 – August 28, 2026",
+    "href": "https://loyaltylobby.com/",
+    "source": "LOYALTYLOBBY",
+    "sourceLabel": "🌐 LoyaltyLobby",
+    "category": "雅高",
+    "brandTag": "雅高",
+    "sortTime": "2026-07-08",
+    "author": "John Ollila"
+  },
+  {
+    "id": "ll_20260708_08",
+    "title": "美国运通积分转维珍大西洋航空30%加赠（7月31日截止）",
+    "originalTitle": "Amex Membership Rewards US To Virgin Atlantic 30% Conversion Bonus Until July 31, 2026",
+    "href": "https://loyaltylobby.com/",
+    "source": "LOYALTYLOBBY",
+    "sourceLabel": "🌐 LoyaltyLobby",
+    "category": "美国运通",
+    "brandTag": "美国运通",
+    "sortTime": "2026-07-08",
+    "author": "John Ollila"
+  },
+  {
+    "id": "ll_20260708_09",
+    "title": "读者提问：第一次在凯悦酒店被超售 bump？",
+    "originalTitle": "Reader Question: Being Bumped (Hyatt Hotel) For The First Time..?",
+    "href": "https://loyaltylobby.com/",
+    "source": "LOYALTYLOBBY",
+    "sourceLabel": "🌐 LoyaltyLobby",
+    "category": "凯悦",
+    "brandTag": "凯悦",
+    "sortTime": "2026-07-08",
+    "author": "John Ollila"
+  },
+  {
+    "id": "ll_20260708_10",
+    "title": "读者提醒：卡塔尔航空中转停留套餐对消费者有误导性",
+    "originalTitle": "Reader Warning: Qatar Airways Stopover Is Misleading To Consumers",
+    "href": "https://loyaltylobby.com/",
+    "source": "LOYALTYLOBBY",
+    "sourceLabel": "🌐 LoyaltyLobby",
+    "category": "卡塔尔",
+    "brandTag": "卡塔尔",
+    "sortTime": "2026-07-08",
+    "author": "John Ollila"
+  },
+  {
+    "id": "ll_20260708_11",
+    "title": "IHG x Revolut Essential & Elite借记卡发布优惠（6月30日-8月25日）",
+    "originalTitle": "IHG x Revolut Essential & Elite Debit Cards & Launch Offer June 30 – August 25, 2026",
+    "href": "https://loyaltylobby.com/",
+    "source": "LOYALTYLOBBY",
+    "sourceLabel": "🌐 LoyaltyLobby",
+    "category": "IHG",
+    "brandTag": "IHG",
+    "sortTime": "2026-07-08",
+    "author": "John Ollila"
+  },
+  {
+    "id": "ll_20260708_12",
+    "title": "泰国特别调查部聚焦曼谷机场749亿泰铢合同招标丑闻",
+    "originalTitle": "Thailand’s Department of Special Investigation Zooms In On ฿74.9 Billion Bangkok Airport Contract Bidding Scandal",
+    "href": "https://loyaltylobby.com/",
+    "source": "LOYALTYLOBBY",
+    "sourceLabel": "🌐 LoyaltyLobby",
+    "category": "海外航旅资讯",
+    "brandTag": "海外航旅资讯",
+    "sortTime": "2026-07-08",
+    "author": "John Ollila"
+  },
+  {
+    "id": "ll_20260708_13",
+    "title": "赔偿诊所：3月从阿联酋逃脱经历",
+    "originalTitle": "Compensation Clinic: March Escape From The UAE",
+    "href": "https://loyaltylobby.com/",
+    "source": "LOYALTYLOBBY",
+    "sourceLabel": "🌐 LoyaltyLobby",
+    "category": "赔偿",
+    "brandTag": "赔偿",
+    "sortTime": "2026-07-08",
+    "author": "John Ollila"
+  },
+  {
+    "id": "ll_20260708_14",
+    "title": "使用Apple Pay遭遇欺诈尝试？",
+    "originalTitle": "Fraud Attempts From Using Apple Pay?",
+    "href": "https://loyaltylobby.com/",
+    "source": "LOYALTYLOBBY",
+    "sourceLabel": "🌐 LoyaltyLobby",
+    "category": "海外航旅资讯",
+    "brandTag": "海外航旅资讯",
+    "sortTime": "2026-07-08",
+    "author": "John Ollila"
+  },
+  {
+    "id": "ll_20260708_15",
+    "title": "读者提问：万豪为8晚AC酒店入账230,717积分但仅计2个精英房晚——你怎么看？",
+    "originalTitle": "Reader Question: Marriott credited me 230,717 points for an 8-night AC stay – but only 2 Elite Night Credits – What Would You Do?",
+    "href": "https://loyaltylobby.com/",
+    "source": "LOYALTYLOBBY",
+    "sourceLabel": "🌐 LoyaltyLobby",
+    "category": "万豪",
+    "brandTag": "万豪",
+    "sortTime": "2026-07-08",
+    "author": "John Ollila"
+  },
+  {
+    "id": "ll_20260708_16",
+    "title": "意大利及其他欧洲国家可能在夏季暂停EES以处理旅客",
+    "originalTitle": "Italy & Other European Countries May Have To Suspend EES During Summer Months To Process Passengers",
+    "href": "https://loyaltylobby.com/",
+    "source": "LOYALTYLOBBY",
+    "sourceLabel": "🌐 LoyaltyLobby",
+    "category": "海外航旅资讯",
+    "brandTag": "海外航旅资讯",
+    "sortTime": "2026-07-08",
+    "author": "John Ollila"
+  },
+  {
+    "id": "ll_20260708_17",
+    "title": "雅高ALL Accor+ Explorer推荐好友促销（7月6日-8月28日）",
+    "originalTitle": "ALL Accor+ Explorer Refer-a-Friend Promotion July 6 – August 28, 2026",
+    "href": "https://loyaltylobby.com/",
+    "source": "LOYALTYLOBBY",
+    "sourceLabel": "🌐 LoyaltyLobby",
+    "category": "雅高",
+    "brandTag": "雅高",
+    "sortTime": "2026-07-08",
+    "author": "John Ollila"
+  },
+  {
+    "id": "ll_20260708_18",
+    "title": "雅高ALL 7月积分奖励及房价优惠",
+    "originalTitle": "ALL Accor Bonus Points & Rate Offers For July 2026",
+    "href": "https://loyaltylobby.com/",
+    "source": "LOYALTYLOBBY",
+    "sourceLabel": "🌐 LoyaltyLobby",
+    "category": "雅高",
+    "brandTag": "雅高",
+    "sortTime": "2026-07-08",
+    "author": "John Ollila"
+  },
+  {
+    "id": "ll_20260708_19",
+    "title": "雅高ALL与日航里程银行积分转换20%加赠（7月1-31日）",
+    "originalTitle": "ALL Accor & Japan Airlines Mileage Bank 20% Conversion Bonus July 1 – 31, 2026",
+    "href": "https://loyaltylobby.com/",
+    "source": "LOYALTYLOBBY",
+    "sourceLabel": "🌐 LoyaltyLobby",
+    "category": "雅高",
+    "brandTag": "雅高",
+    "sortTime": "2026-07-08",
+    "author": "John Ollila"
+  },
+  {
+    "id": "ll_20260708_20",
+    "title": "希尔顿与SLH合作酒店增减（2026年7月）",
+    "originalTitle": "Hilton & SLH Partnership Additions And Removals July 2026",
+    "href": "https://loyaltylobby.com/",
+    "source": "LOYALTYLOBBY",
+    "sourceLabel": "🌐 LoyaltyLobby",
+    "category": "希尔顿",
+    "brandTag": "希尔顿",
+    "sortTime": "2026-07-08",
+    "author": "John Ollila"
+  },
+  {
+    "id": "ll_20260708_21",
+    "title": "希尔顿荣誉客会7月积分奖励及房价优惠",
+    "originalTitle": "Hilton Honors Bonus Points & Rate Offers For July 2026",
+    "href": "https://loyaltylobby.com/",
+    "source": "LOYALTYLOBBY",
+    "sourceLabel": "🌐 LoyaltyLobby",
+    "category": "希尔顿",
+    "brandTag": "希尔顿",
+    "sortTime": "2026-07-08",
+    "author": "John Ollila"
+  },
+  {
+    "id": "ll_20260708_22",
+    "title": "已发布：希尔顿荣誉客会住宿额外奖励2,000土耳其航空里程（6月1日-9月13日）",
+    "originalTitle": "POSTED: Hilton Honors 2,000 Bonus Turkish Airlines Miles&Smiles Miles For A Stay June 1 – September 13, 2026",
+    "href": "https://loyaltylobby.com/",
+    "source": "LOYALTYLOBBY",
+    "sourceLabel": "🌐 LoyaltyLobby",
+    "category": "希尔顿",
+    "brandTag": "希尔顿",
+    "sortTime": "2026-07-08",
+    "author": "John Ollila"
+  },
+  {
+    "id": "ll_20260708_23",
+    "title": "万豪Bonvoy积分闪电贬值5%-10%",
+    "originalTitle": "Marriott Bonvoy 5% To 10% Flash Points Devaluation",
+    "href": "https://loyaltylobby.com/",
+    "source": "LOYALTYLOBBY",
+    "sourceLabel": "🌐 LoyaltyLobby",
+    "category": "万豪",
+    "brandTag": "万豪",
+    "sortTime": "2026-07-08",
+    "author": "John Ollila"
+  },
+  {
+    "id": "ll_20260708_24",
+    "title": "万豪Bonvoy 7月积分奖励及房价更新",
+    "originalTitle": "Marriott Bonvoy Bonus Points & Rates Update July 2026",
+    "href": "https://loyaltylobby.com/",
+    "source": "LOYALTYLOBBY",
+    "sourceLabel": "🌐 LoyaltyLobby",
+    "category": "万豪",
+    "brandTag": "万豪",
+    "sortTime": "2026-07-08",
+    "author": "John Ollila"
+  },
+  {
+    "id": "ll_20260708_25",
+    "title": "Chase Sapphire Reserve持卡人享万豪金卡3个月+快速保级至2028年2月",
+    "originalTitle": "Marriott Gold For 3 Months With A Fast Track To Keep It Through February 2028 For Chase Sapphire Reserve Cardholders",
+    "href": "https://loyaltylobby.com/",
+    "source": "LOYALTYLOBBY",
+    "sourceLabel": "🌐 LoyaltyLobby",
+    "category": "万豪",
+    "brandTag": "万豪",
+    "sortTime": "2026-07-08",
+    "author": "John Ollila"
+  },
+  {
+    "id": "ll_20260708_26",
+    "title": "IHG中东、非洲、印度及南亚36小时住宿促销（至9月6日）",
+    "originalTitle": "IHG 36-Hour Stay For Middle East, Africa, India & South Asia Until September 6, 2026",
+    "href": "https://loyaltylobby.com/",
+    "source": "LOYALTYLOBBY",
+    "sourceLabel": "🌐 LoyaltyLobby",
+    "category": "IHG",
+    "brandTag": "IHG",
+    "sortTime": "2026-07-08",
+    "author": "John Ollila"
+  },
+  {
+    "id": "ll_20260708_27",
+    "title": "IHG优悦会7月积分奖励及房价促销更新",
+    "originalTitle": "IHG One Rewards Bonus Points & Rate Promotions Update July 2026",
+    "href": "https://loyaltylobby.com/",
+    "source": "LOYALTYLOBBY",
+    "sourceLabel": "🌐 LoyaltyLobby",
+    "category": "IHG",
+    "brandTag": "IHG",
+    "sortTime": "2026-07-08",
+    "author": "John Ollila"
+  },
+  {
+    "id": "ll_20260708_28",
+    "title": "IHG取消邮件客服（仅支持电话、传真或AI聊天机器人）",
+    "originalTitle": "IHG Ends Email Customer Support (Call, Fax Or Use Brainless AI Chatbot)",
+    "href": "https://loyaltylobby.com/",
+    "source": "LOYALTYLOBBY",
+    "sourceLabel": "🌐 LoyaltyLobby",
+    "category": "IHG",
+    "brandTag": "IHG",
+    "sortTime": "2026-07-08",
+    "author": "John Ollila"
+  },
+  {
+    "id": "ll_20260708_29",
+    "title": "凯悦将更多酒店排除在套房升级奖励之外",
+    "originalTitle": "Hyatt Excludes More Properties From Suite Upgrade Awards",
+    "href": "https://loyaltylobby.com/",
+    "source": "LOYALTYLOBBY",
+    "sourceLabel": "🌐 LoyaltyLobby",
+    "category": "凯悦",
+    "brandTag": "凯悦",
+    "sortTime": "2026-07-08",
+    "author": "John Ollila"
+  },
+  {
+    "id": "ll_20260708_30",
+    "title": "读者提问：第一次在凯悦酒店被超售 bump？",
+    "originalTitle": "Reader Question: Being Bumped (Hyatt Hotel) For The First Time..?",
+    "href": "https://loyaltylobby.com/",
+    "source": "LOYALTYLOBBY",
+    "sourceLabel": "🌐 LoyaltyLobby",
+    "category": "凯悦",
+    "brandTag": "凯悦",
+    "sortTime": "2026-07-08",
+    "author": "John Ollila"
+  },
+  {
+    "id": "cmb_20260708_01",
+    "title": "关于启用新版《掌上生活用户隐私权政策》的通告",
+    "href": "https://cc.cmbchina.com/list/cusservice/news.htm",
+    "source": "CMB",
+    "sourceLabel": "💳 招行信用卡",
+    "category": "信用卡公告",
+    "sortTime": "2026-07-08",
+    "author": ""
+  },
+  {
+    "id": "cmb_20260708_02",
+    "title": "关于启用云闪付、百度平台《招商银行信用卡小程序用户隐私权政策》的通告",
+    "href": "https://cc.cmbchina.com/list/cusservice/news.htm",
+    "source": "CMB",
+    "sourceLabel": "💳 招行信用卡",
+    "category": "信用卡公告",
+    "sortTime": "2026-07-08",
+    "author": ""
+  },
+  {
+    "id": "cmb_20260708_03",
+    "title": "关于发布2026~2027年度招商银行高端信用卡礼遇的通告",
+    "href": "https://cc.cmbchina.com/list/cusservice/news.htm",
+    "source": "CMB",
+    "sourceLabel": "💳 招行信用卡",
+    "category": "信用卡公告",
+    "sortTime": "2026-07-08",
+    "author": ""
+  },
+  {
+    "id": "cmb_20260708_04",
+    "title": "关于启用小红书平台《招商银行信用卡小程序用户隐私权政策》的通告",
+    "href": "https://cc.cmbchina.com/list/cusservice/news.htm",
+    "source": "CMB",
+    "sourceLabel": "💳 招行信用卡",
+    "category": "信用卡公告",
+    "sortTime": "2026-07-08",
+    "author": ""
+  },
+  {
+    "id": "cmb_20260708_05",
+    "title": "关于启用新版《敏感个人信息处理授权书》的通告",
+    "href": "https://cc.cmbchina.com/list/cusservice/news.htm",
+    "source": "CMB",
+    "sourceLabel": "💳 招行信用卡",
+    "category": "信用卡公告",
+    "sortTime": "2026-07-08",
+    "author": ""
+  },
+  {
+    "id": "cmb_20260708_06",
+    "title": "关于累积交易奖励积分的支付机构更新的通告",
+    "href": "https://cc.cmbchina.com/list/cusservice/news.htm",
+    "source": "CMB",
+    "sourceLabel": "💳 招行信用卡",
+    "category": "信用卡公告",
+    "sortTime": "2026-07-08",
+    "author": ""
+  },
+  {
+    "id": "cmb_20260708_07",
+    "title": "关于启用新版《招商银行信用卡账单分期条款及细则》的通告",
+    "href": "https://cc.cmbchina.com/list/cusservice/news.htm",
+    "source": "CMB",
+    "sourceLabel": "💳 招行信用卡",
+    "category": "信用卡公告",
+    "sortTime": "2026-07-08",
+    "author": ""
+  },
+  {
+    "id": "cmb_20260708_08",
+    "title": "关于启用新版《招商银行信用卡自动还款服务协议》《招商银行预约还款服务协议》的通告",
+    "href": "https://cc.cmbchina.com/list/cusservice/news.htm",
+    "source": "CMB",
+    "sourceLabel": "💳 招行信用卡",
+    "category": "信用卡公告",
+    "sortTime": "2026-07-08",
+    "author": ""
+  },
+  {
+    "id": "cmb_20260708_09",
+    "title": "关于招商银行部分信用卡停止发行的通告",
+    "href": "https://cc.cmbchina.com/list/cusservice/news.htm",
+    "source": "CMB",
+    "sourceLabel": "💳 招行信用卡",
+    "category": "信用卡公告",
+    "sortTime": "2026-07-08",
+    "author": ""
+  },
+  {
+    "id": "cmb_20260708_10",
+    "title": "关于启用《招商银行信用卡抖音服务用户隐私权政策》的通告",
+    "href": "https://cc.cmbchina.com/list/cusservice/news.htm",
+    "source": "CMB",
+    "sourceLabel": "💳 招行信用卡",
+    "category": "信用卡公告",
+    "sortTime": "2026-07-08",
+    "author": ""
+  },
+  {
+    "id": "cmb_20260708_11",
+    "title": "关于启用《招商银行信用卡抖音服务使用协议》的通告",
+    "href": "https://cc.cmbchina.com/list/cusservice/news.htm",
+    "source": "CMB",
+    "sourceLabel": "💳 招行信用卡",
+    "category": "信用卡公告",
+    "sortTime": "2026-07-08",
+    "author": ""
+  },
+  {
+    "id": "cmb_20260708_12",
+    "title": "关于启用《招商银行信用卡支付宝便捷服务用户隐私权政策》的通告",
+    "href": "https://cc.cmbchina.com/list/cusservice/news.htm",
+    "source": "CMB",
+    "sourceLabel": "💳 招行信用卡",
+    "category": "信用卡公告",
+    "sortTime": "2026-07-08",
+    "author": ""
+  },
+  {
+    "id": "cmb_20260708_13",
+    "title": "关于启用新版《招商银行信用卡账单分期业务贴息条款及细则》的通告",
+    "href": "https://cc.cmbchina.com/list/cusservice/news.htm",
+    "source": "CMB",
+    "sourceLabel": "💳 招行信用卡",
+    "category": "信用卡公告",
+    "sortTime": "2026-07-08",
+    "author": ""
+  },
+  {
+    "id": "cmb_20260708_14",
+    "title": "关于招商银行信用卡中心南京分中心更换金融许可证的公告",
+    "href": "https://cc.cmbchina.com/list/cusservice/news.htm",
+    "source": "CMB",
+    "sourceLabel": "💳 招行信用卡",
+    "category": "信用卡公告",
+    "sortTime": "2026-07-08",
+    "author": ""
+  },
+  {
+    "id": "cmb_20260708_15",
+    "title": "关于招商银行信用卡中心温州分中心更换金融许可证的公告",
+    "href": "https://cc.cmbchina.com/list/cusservice/news.htm",
+    "source": "CMB",
+    "sourceLabel": "💳 招行信用卡",
+    "category": "信用卡公告",
+    "sortTime": "2026-07-08",
+    "author": ""
+  },
+  {
+    "id": "bocom_20260708_01",
+    "title": "关于2026年爱宠信用卡金卡及爱宠超逸白金卡定制卡面、定制卡号首月限免优惠活动调整的公告",
+    "href": "https://creditcard.bankcomm.com/notice/",
+    "source": "BOCOM",
+    "sourceLabel": "💳 交行信用卡",
+    "category": "信用卡公告",
+    "sortTime": "2026-07-08",
+    "author": ""
+  },
+  {
+    "id": "bocom_20260708_02",
+    "title": "关于发布新版《交通银行太平洋信用卡好商贷汽车分期和汽车附加费分期业务协议》的公告",
+    "href": "https://creditcard.bankcomm.com/notice/",
+    "source": "BOCOM",
+    "sourceLabel": "💳 交行信用卡",
+    "category": "信用卡公告",
+    "sortTime": "2026-07-08",
+    "author": ""
+  },
+  {
+    "id": "eq_20260708095023_0",
+    "title": "2026-07-08 09:50:23 91 km SSW of Isangel, Vanuatu M5.8",
+    "href": "https://earthquake.usgs.gov/earthquakes/map/?latitude=-20.2559&longitude=168.8353&zoom=8",
+    "source": "CEIC",
+    "sourceLabel": "🌏 CEIC地震",
+    "category": "地震快讯",
+    "sortTime": "2026-07-08",
+    "author": ""
+  },
+  {
+    "id": "eq_20260708020848_1",
+    "title": "2026-07-08 02:08:48 15 km NNE of Xunchang, China M5",
+    "href": "https://earthquake.usgs.gov/earthquakes/map/?latitude=28.5871&longitude=104.7549&zoom=8",
+    "source": "CEIC",
+    "sourceLabel": "🌏 CEIC地震",
+    "category": "地震快讯",
+    "sortTime": "2026-07-08",
+    "author": ""
+  },
+  {
+    "id": "eq_20260707221229_2",
+    "title": "2026-07-07 22:12:29 13 km W of Changning, China M5.1",
+    "href": "https://earthquake.usgs.gov/earthquakes/map/?latitude=28.5702&longitude=104.788&zoom=8",
+    "source": "CEIC",
+    "sourceLabel": "🌏 CEIC地震",
+    "category": "地震快讯",
+    "sortTime": "2026-07-08",
+    "author": ""
+  },
+  {
+    "id": "eq_20260707194452_3",
+    "title": "2026-07-07 19:44:52 95 km WSW of Labuan, Indonesia M5.3",
+    "href": "https://earthquake.usgs.gov/earthquakes/map/?latitude=-6.7717&longitude=105.0646&zoom=8",
+    "source": "CEIC",
+    "sourceLabel": "🌏 CEIC地震",
+    "category": "地震快讯",
+    "sortTime": "2026-07-08",
+    "author": ""
+  },
+  {
+    "id": "eq_20260707181132_4",
+    "title": "2026-07-07 18:11:32 10 km WSW of Orotina, Costa Rica M5.3",
+    "href": "https://earthquake.usgs.gov/earthquakes/map/?latitude=9.8644&longitude=-84.6042&zoom=8",
+    "source": "CEIC",
+    "sourceLabel": "🌏 CEIC地震",
+    "category": "地震快讯",
+    "sortTime": "2026-07-08",
+    "author": ""
+  },
+  {
+    "id": "rail_20260708_01",
+    "title": "关于铁路收款方变更的公告",
+    "href": "https://www.12306.cn/",
+    "source": "12306",
+    "sourceLabel": "🚄 12306",
+    "category": "铁路动态",
+    "sortTime": "2026-07-08",
+    "author": ""
+  },
+  {
+    "id": "rail_20260708_02",
+    "title": "关于铁路客运推广使用全面数字化的电子发票的公告",
+    "href": "https://www.12306.cn/",
+    "source": "12306",
+    "sourceLabel": "🚄 12306",
+    "category": "铁路动态",
+    "sortTime": "2026-07-08",
+    "author": ""
+  },
+  {
+    "id": "rail_20260708_03",
+    "title": "关于优化铁路车票改签规则的公告",
+    "href": "https://www.12306.cn/",
+    "source": "12306",
+    "sourceLabel": "🚄 12306",
+    "category": "铁路动态",
+    "sortTime": "2026-07-08",
+    "author": ""
+  },
+  {
+    "id": "rail_20260708_04",
+    "title": "铁路旅客禁止、限制携带和托运物品目录",
+    "href": "https://www.12306.cn/",
+    "source": "12306",
+    "sourceLabel": "🚄 12306",
+    "category": "铁路动态",
+    "sortTime": "2026-07-08",
+    "author": ""
+  },
+  {
+    "id": "rail_20260708_05",
+    "title": "关于铁路车站起售时间的公告",
+    "href": "https://www.12306.cn/",
+    "source": "12306",
+    "sourceLabel": "🚄 12306",
+    "category": "铁路动态",
+    "sortTime": "2026-07-08",
+    "author": ""
+  },
+  {
+    "id": "rail_20260708_06",
+    "title": "中国铁路成都局集团有限公司关于2026年7月10日至20日加开部分列车的公告",
+    "href": "https://www.12306.cn/",
+    "source": "12306",
+    "sourceLabel": "🚄 12306",
+    "category": "铁路动态",
+    "sortTime": "2026-07-08",
+    "author": ""
+  },
+  {
+    "id": "rail_20260708_07",
+    "title": "中国铁路上海局集团有限公司关于2026年7月10日-2026年7月26日增开部分旅客列车的公告",
+    "href": "https://www.12306.cn/",
+    "source": "12306",
+    "sourceLabel": "🚄 12306",
+    "category": "铁路动态",
+    "sortTime": "2026-07-08",
+    "author": ""
+  },
+  {
+    "id": "rail_20260708_08",
+    "title": "中国铁路呼和浩特局集团有限公司关于2026年7月1至8月30日加开部分旅客列车的公告",
+    "href": "https://www.12306.cn/",
+    "source": "12306",
+    "sourceLabel": "🚄 12306",
+    "category": "铁路动态",
+    "sortTime": "2026-07-08",
+    "author": ""
+  },
+  {
+    "id": "rail_20260708_09",
+    "title": "中国铁路上海局集团有限公司关于2026年7月3日-2026年7月12日增开部分旅客列车的公告",
+    "href": "https://www.12306.cn/",
+    "source": "12306",
+    "sourceLabel": "🚄 12306",
+    "category": "铁路动态",
+    "sortTime": "2026-07-08",
+    "author": ""
+  },
+  {
+    "id": "rail_20260708_10",
+    "title": "中国铁路成都局集团有限公司关于2026年7月3日至8月2日加开部分列车的公告",
+    "href": "https://www.12306.cn/",
+    "source": "12306",
+    "sourceLabel": "🚄 12306",
+    "category": "铁路动态",
+    "sortTime": "2026-07-08",
+    "author": ""
+  },
+  {
+    "id": "rail_20260708_11",
+    "title": "中国铁路上海局集团有限公司关于2026年7月3日-2026年7月27日增开部分旅客列车的公告",
+    "href": "https://www.12306.cn/",
+    "source": "12306",
+    "sourceLabel": "🚄 12306",
+    "category": "铁路动态",
+    "sortTime": "2026-07-08",
+    "author": ""
+  },
+  {
+    "id": "rail_20260708_12",
+    "title": "中国铁路上海局集团有限公司关于2026年7月3日-2026年7月14日增开部分旅客列车的公告",
+    "href": "https://www.12306.cn/",
+    "source": "12306",
+    "sourceLabel": "🚄 12306",
+    "category": "铁路动态",
+    "sortTime": "2026-07-08",
+    "author": ""
+  },
+  {
+    "id": "rail_20260708_13",
+    "title": "中国铁路上海局集团有限公司关于2026年7月2日-2026年7月12日增开部分旅客列车的公告",
+    "href": "https://www.12306.cn/",
+    "source": "12306",
+    "sourceLabel": "🚄 12306",
+    "category": "铁路动态",
+    "sortTime": "2026-07-08",
+    "author": ""
+  },
+  {
+    "id": "rail_20260708_14",
+    "title": "中国铁路成都局集团有限公司关于2026年6月26日至29日加开部分列车的公告",
+    "href": "https://www.12306.cn/",
+    "source": "12306",
+    "sourceLabel": "🚄 12306",
+    "category": "铁路动态",
+    "sortTime": "2026-07-08",
+    "author": ""
+  },
+  {
+    "id": "rail_20260708_15",
+    "title": "官方APP下载，目前铁路未授权其他网站或APP开展类似服务内容，敬请广大用户注意。",
+    "href": "https://www.12306.cn/",
+    "source": "12306",
+    "sourceLabel": "🚄 12306",
+    "category": "铁路动态",
+    "sortTime": "2026-07-08",
+    "author": ""
+  },
+  {
+    "id": "carnoc_662722",
+    "title": "易捷航空准备73亿美元“卖身”",
+    "href": "http://news.carnoc.com/list/662/662722.html",
+    "source": "CARNOC",
+    "sourceLabel": "✈️ 民航资源网",
+    "category": "民航新闻",
+    "sortTime": "2026-07-07",
+    "author": ""
+  },
+  {
+    "id": "carnoc_662716",
+    "title": "南航新公司！注册资本1亿元！",
+    "href": "http://news.carnoc.com/list/662/662716.html",
+    "source": "CARNOC",
+    "sourceLabel": "✈️ 民航资源网",
+    "category": "民航新闻",
+    "sortTime": "2026-07-07",
+    "author": ""
+  },
+  {
+    "id": "carnoc_662712",
+    "title": "男子葡萄牙机场袭警致重伤，被捕！",
+    "href": "http://news.carnoc.com/list/662/662712.html",
+    "source": "CARNOC",
+    "sourceLabel": "✈️ 民航资源网",
+    "category": "民航新闻",
+    "sortTime": "2026-07-07",
+    "author": ""
+  },
+  {
+    "id": "carnoc_662668",
+    "title": "首都机场启动运管委协同运行一级响应机制",
+    "href": "http://news.carnoc.com/list/662/662668.html",
+    "source": "CARNOC",
+    "sourceLabel": "✈️ 民航资源网",
+    "category": "民航新闻",
+    "sortTime": "2026-07-07",
+    "author": ""
+  },
+  {
+    "id": "carnoc_662648",
+    "title": "南航拟募资150亿，引进46架飞机",
+    "href": "http://news.carnoc.com/list/662/662648.html",
+    "source": "CARNOC",
+    "sourceLabel": "✈️ 民航资源网",
+    "category": "民航新闻",
+    "sortTime": "2026-07-07",
+    "author": ""
+  },
+  {
+    "id": "carnoc_662646",
+    "title": "颜晓东履新民航局运行监控中心副主任",
+    "href": "http://news.carnoc.com/list/662/662646.html",
+    "source": "CARNOC",
+    "sourceLabel": "✈️ 民航资源网",
+    "category": "民航新闻",
+    "sortTime": "2026-07-07",
+    "author": ""
+  },
+  {
+    "id": "carnoc_662642",
+    "title": "SITA：单件错运行李成本约1,800元",
+    "href": "http://news.carnoc.com/list/662/662642.html",
+    "source": "CARNOC",
+    "sourceLabel": "✈️ 民航资源网",
+    "category": "民航新闻",
+    "sortTime": "2026-07-07",
+    "author": ""
+  },
+  {
+    "id": "carnoc_662632",
+    "title": "给HU407航班全体机组的感谢信！",
+    "href": "http://news.carnoc.com/list/662/662632.html",
+    "source": "CARNOC",
+    "sourceLabel": "✈️ 民航资源网",
+    "category": "民航新闻",
+    "sortTime": "2026-07-07",
+    "author": ""
+  },
+  {
+    "id": "carnoc_662628",
+    "title": "上海航空 “太雅了”！",
+    "href": "http://news.carnoc.com/list/662/662628.html",
+    "source": "CARNOC",
+    "sourceLabel": "✈️ 民航资源网",
+    "category": "民航新闻",
+    "sortTime": "2026-07-07",
+    "author": ""
+  },
+  {
+    "id": "carnoc_662616",
+    "title": "民航局：打破数据“流通壁垒 构建可信数据空间",
+    "href": "http://news.carnoc.com/list/662/662616.html",
+    "source": "CARNOC",
+    "sourceLabel": "✈️ 民航资源网",
+    "category": "民航新闻",
+    "sortTime": "2026-07-06",
+    "author": ""
+  },
+  {
+    "id": "carnoc_662600",
+    "title": "民航局原纪检组组长梁潮平主动投案",
+    "href": "http://news.carnoc.com/list/662/662600.html",
+    "source": "CARNOC",
+    "sourceLabel": "✈️ 民航资源网",
+    "category": "民航新闻",
+    "sortTime": "2026-07-06",
+    "author": ""
+  },
+  {
+    "id": "carnoc_662542",
+    "title": "香港机场摆渡车与行李拖车相撞，7名旅客受伤！",
+    "href": "http://news.carnoc.com/list/662/662542.html",
+    "source": "CARNOC",
+    "sourceLabel": "✈️ 民航资源网",
+    "category": "民航新闻",
+    "sortTime": "2026-07-06",
+    "author": ""
+  },
+  {
+    "id": "carnoc_662538",
+    "title": "火了！万人空巷狂热接机！搜索热度涨超200%！",
+    "href": "http://news.carnoc.com/list/662/662538.html",
+    "source": "CARNOC",
+    "sourceLabel": "✈️ 民航资源网",
+    "category": "民航新闻",
+    "sortTime": "2026-07-06",
+    "author": ""
+  },
+  {
+    "id": "carnoc_662534",
+    "title": "达美航空客机降落时，被烟花击中",
+    "href": "http://news.carnoc.com/list/662/662534.html",
+    "source": "CARNOC",
+    "sourceLabel": "✈️ 民航资源网",
+    "category": "民航新闻",
+    "sortTime": "2026-07-06",
+    "author": ""
+  },
+  {
+    "id": "carnoc_662532",
+    "title": "Mayday！飞机水上硬着陆 机翼断裂",
+    "href": "http://news.carnoc.com/list/662/662532.html",
+    "source": "CARNOC",
+    "sourceLabel": "✈️ 民航资源网",
+    "category": "民航新闻",
+    "sortTime": "2026-07-06",
+    "author": ""
+  },
+  {
+    "id": "carnoc_662520",
+    "title": "国货航执行中国政府援助委内瑞拉物资运输任务",
+    "href": "http://news.carnoc.com/list/662/662520.html",
+    "source": "CARNOC",
+    "sourceLabel": "✈️ 民航资源网",
+    "category": "民航新闻",
+    "sortTime": "2026-07-05",
+    "author": ""
+  },
+  {
+    "id": "carnoc_662512",
+    "title": "乘务员涉毒案后续：泰民航局下令严管机组随身物品",
+    "href": "http://news.carnoc.com/list/662/662512.html",
+    "source": "CARNOC",
+    "sourceLabel": "✈️ 民航资源网",
+    "category": "民航新闻",
+    "sortTime": "2026-07-05",
+    "author": ""
+  },
+  {
+    "id": "carnoc_662506",
+    "title": "星宇航空首架艺术机交付 董事长亲自飞回",
+    "href": "http://news.carnoc.com/list/662/662506.html",
+    "source": "CARNOC",
+    "sourceLabel": "✈️ 民航资源网",
+    "category": "民航新闻",
+    "sortTime": "2026-07-05",
+    "author": ""
+  },
+  {
+    "id": "carnoc_662504",
+    "title": "美联航787客机降落时刹车失灵 宣布紧急状态",
+    "href": "http://news.carnoc.com/list/662/662504.html",
+    "source": "CARNOC",
+    "sourceLabel": "✈️ 民航资源网",
+    "category": "民航新闻",
+    "sortTime": "2026-07-05",
+    "author": ""
+  },
+  {
+    "id": "carnoc_662502",
+    "title": "泰国飞行员就业难，自掏腰包上机飞行",
+    "href": "http://news.carnoc.com/list/662/662502.html",
+    "source": "CARNOC",
+    "sourceLabel": "✈️ 民航资源网",
+    "category": "民航新闻",
+    "sortTime": "2026-07-05",
+    "author": ""
+  },
+  {
+    "id": "carnoc_662500",
+    "title": "俄罗斯航司近五分之一机队停飞",
+    "href": "http://news.carnoc.com/list/662/662500.html",
+    "source": "CARNOC",
+    "sourceLabel": "✈️ 民航资源网",
+    "category": "民航新闻",
+    "sortTime": "2026-07-05",
+    "author": ""
+  },
+  {
+    "id": "carnoc_662498",
+    "title": "幸福航空重整新进展！",
+    "href": "http://news.carnoc.com/list/662/662498.html",
+    "source": "CARNOC",
+    "sourceLabel": "✈️ 民航资源网",
+    "category": "民航新闻",
+    "sortTime": "2026-07-05",
+    "author": ""
+  },
+  {
+    "id": "carnoc_662486",
+    "title": "珠海机场，大面积延误！",
+    "href": "http://news.carnoc.com/list/662/662486.html",
+    "source": "CARNOC",
+    "sourceLabel": "✈️ 民航资源网",
+    "category": "民航新闻",
+    "sortTime": "2026-07-04",
+    "author": ""
+  },
+  {
+    "id": "carnoc_662472",
+    "title": "浦东机场四期扩建工程T3航站楼行李处理系统正式开工建设",
+    "href": "http://news.carnoc.com/list/662/662472.html",
+    "source": "CARNOC",
+    "sourceLabel": "✈️ 民航资源网",
+    "category": "民航新闻",
+    "sortTime": "2026-07-04",
+    "author": ""
+  },
+  {
+    "id": "carnoc_662470",
+    "title": "运12F大气综合航测飞机首飞成功",
+    "href": "http://news.carnoc.com/list/662/662470.html",
+    "source": "CARNOC",
+    "sourceLabel": "✈️ 民航资源网",
+    "category": "民航新闻",
+    "sortTime": "2026-07-04",
+    "author": ""
+  },
+  {
+    "id": "carnoc_662464",
+    "title": "南航国际融资租赁任命新董事长",
+    "href": "http://news.carnoc.com/list/662/662464.html",
+    "source": "CARNOC",
+    "sourceLabel": "✈️ 民航资源网",
+    "category": "民航新闻",
+    "sortTime": "2026-07-04",
+    "author": ""
+  },
+  {
+    "id": "embassy_th_2026-06-09_001",
+    "title": "多位中国公民被拒绝入境，大使馆提醒：免签不等于无条件入境",
+    "originalTitle": "中国驻泰国大使馆提醒来泰中国公民提前做好入境准备",
+    "href": "https://finance.sina.com.cn/wm/2026-06-09/doc-iniauzkt5054061.shtml",
+    "source": "驻泰使馆",
+    "sourceLabel": "使馆",
+    "category": "入境政策",
+    "time": "2026-06-09",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "中国驻泰国大使馆",
+    "content": "近期多位中国公民入境泰国时因未能提供返程机票、酒店证明、足额资金证明等被拒入境。提醒：护照有效期不少于6个月，准备返程机票、酒店订单、资金证明（个人1万泰铢/家庭2万泰铢），避免频繁短期往返。",
+    "keywords": [
+      "使馆提醒",
+      "领事提醒",
+      "入境政策",
+      "免签"
+    ]
+  },
+  {
+    "id": "embassy_th_2026-05-28_001",
+    "title": "在泰中国公民须自觉抵制任何形式赌博活动",
+    "originalTitle": "中国驻泰国使馆提醒在泰中国公民自觉抵制任何形式赌博活动",
+    "href": "https://www.gqb.gov.cn/news/2026/0528/62400.shtml",
+    "source": "驻泰使馆",
+    "sourceLabel": "使馆",
+    "category": "安全提醒",
+    "time": "2026-05-28",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "中国驻泰国大使馆",
+    "content": "近年来不少中国公民在海外参赌涉赌，引发绑架、勒索、非法拘禁等恶性案件。提醒：跨境赌博已入刑，泰国法律严格禁止非法赌博及网络博彩。",
+    "keywords": [
+      "安全提醒",
+      "领事提醒"
+    ]
+  },
+  {
+    "id": "embassy_th_2026-05-19_001",
+    "title": "沙缴府中国公民遭非法拘禁勒索，使馆敦促泰方调查",
+    "originalTitle": "中国驻泰使馆发言人就泰国沙缴府发生涉嫌非法拘禁并勒索中国公民案件答记者问",
+    "href": "https://world.people.com.cn/n1/2026/0519/c1002-40723115.html",
+    "source": "驻泰使馆",
+    "sourceLabel": "使馆",
+    "category": "安全提醒",
+    "time": "2026-05-19",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "中国驻泰国大使馆",
+    "content": "近日泰国沙缴府发生中国公民遭非法拘禁并被勒索案件，使馆高度关注，已敦促泰方依法、公正、透明开展调查。提醒在泰及拟赴泰公民提高安全防范意识。",
+    "keywords": [
+      "安全提醒",
+      "领事提醒"
+    ]
+  },
+  {
+    "id": "embassy_th_2026-05-18_001",
+    "title": "警惕高薪招聘陷阱，谨防被诱骗经泰前往泰缅边境",
+    "originalTitle": "中国驻泰使馆提醒中国公民谨防被诱骗经泰前往泰缅边境",
+    "href": "https://world.people.com.cn/n1/2026/0424/c1002-40708204.html",
+    "source": "驻泰使馆",
+    "sourceLabel": "使馆",
+    "category": "安全提醒",
+    "time": "2026-05-18",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "中国驻泰国大使馆",
+    "content": "多名中国公民被不法分子以高薪招聘、旅游观光等名义诱骗，经泰国前往泰缅边境后从事电信网络诈骗等违法犯罪活动，个别人员遭遇人身控制、暴力侵害和非法拘禁。",
+    "keywords": [
+      "安全提醒",
+      "领事提醒"
+    ]
+  },
+  {
+    "id": "citic_20260212_000",
+    "title": "关于2026年人民银行支付系统运行维护安排的公告",
+    "originalTitle": "关于2026年人民银行支付系统运行维护安排的公告",
+    "href": "https://creditcard.citicbank.cn/gonggao/news_260212.shtml",
+    "source": "CITIC",
+    "sourceLabel": "💳 中信信用卡",
+    "category": "系统维护",
+    "time": "2026-02-12",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "中信银行信用卡中心"
+  },
+  {
+    "id": "citic_20260615_001",
+    "title": "关于启用新版《中信银行信用卡账单分期产品合约》的通告",
+    "originalTitle": "关于启用新版《中信银行信用卡账单分期产品合约》的通告",
+    "href": "https://creditcard.citicbank.cn/gonggao/news_260615.shtml",
+    "source": "CITIC",
+    "sourceLabel": "💳 中信信用卡",
+    "category": "分期业务",
+    "time": "2026-06-15",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "中信银行信用卡中心"
+  },
+  {
+    "id": "citic_20260608_002",
+    "title": "关于停止发行“中信裕福联名信用卡”的公告",
+    "originalTitle": "关于停止发行“中信裕福联名信用卡”的公告",
+    "href": "https://creditcard.citicbank.cn/gonggao/news_260608.shtml",
+    "source": "CITIC",
+    "sourceLabel": "💳 中信信用卡",
+    "category": "卡片停发",
+    "time": "2026-06-08",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "中信银行信用卡中心"
+  },
+  {
+    "id": "citic_20260608_003",
+    "title": "关于启用新版《中信银行信用卡关联自动还款服务协议》以及《中信银行信用卡关联自助还款服务协议》的公告",
+    "originalTitle": "关于启用新版《中信银行信用卡关联自动还款服务协议》以及《中信银行信用卡关联自助还款服务协议》的公告",
+    "href": "https://creditcard.citicbank.cn/gonggao/news_260608_2.shtml",
+    "source": "CITIC",
+    "sourceLabel": "💳 中信信用卡",
+    "category": "还款服务",
+    "time": "2026-06-08",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "中信银行信用卡中心"
+  },
+  {
+    "id": "citic_20260522_004",
+    "title": "关于调整《中信银行信用卡快捷支付服务协议》的公告",
+    "originalTitle": "关于调整《中信银行信用卡快捷支付服务协议》的公告",
+    "href": "https://creditcard.citicbank.cn/gonggao/news_260522.shtml",
+    "source": "CITIC",
+    "sourceLabel": "💳 中信信用卡",
+    "category": "支付平台",
+    "time": "2026-05-22",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "中信银行信用卡中心"
+  },
+  {
+    "id": "citic_20260515_005",
+    "title": "关于中信银行IHG优悦会银联联名信用卡卡版焕新的公告",
+    "originalTitle": "关于中信银行IHG优悦会银联联名信用卡卡版焕新的公告",
+    "href": "https://creditcard.citicbank.cn/gonggao/news_260515.shtml",
+    "source": "CITIC",
+    "sourceLabel": "💳 中信信用卡",
+    "category": "联名卡/航空",
+    "time": "2026-05-15",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "中信银行信用卡中心"
+  },
+  {
+    "id": "citic_20260511_006",
+    "title": "关于中信银行厦门航空联名信用卡部分权益调整的公告",
+    "originalTitle": "关于中信银行厦门航空联名信用卡部分权益调整的公告",
+    "href": "https://creditcard.citicbank.cn/gonggao/news_260511.shtml",
+    "source": "CITIC",
+    "sourceLabel": "💳 中信信用卡",
+    "category": "权益调整",
+    "time": "2026-05-11",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "中信银行信用卡中心"
+  },
+  {
+    "id": "citic_20260429_007",
+    "title": "中信银行信用卡中心“瑞幸畅饮卡”停止服务公告",
+    "originalTitle": "中信银行信用卡中心“瑞幸畅饮卡”停止服务公告",
+    "href": "https://creditcard.citicbank.cn/gonggao/news_260429.shtml",
+    "source": "CITIC",
+    "sourceLabel": "💳 中信信用卡",
+    "category": "卡片停发",
+    "time": "2026-04-29",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "中信银行信用卡中心"
+  },
+  {
+    "id": "citic_20260423_008",
+    "title": "中信银行信用卡中心“中信福利社”微信小程序停止服务公告",
+    "originalTitle": "中信银行信用卡中心“中信福利社”微信小程序停止服务公告",
+    "href": "https://creditcard.citicbank.cn/gonggao/news_260423.shtml",
+    "source": "CITIC",
+    "sourceLabel": "💳 中信信用卡",
+    "category": "卡片停发",
+    "time": "2026-04-23",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "中信银行信用卡中心"
+  },
+  {
+    "id": "citic_20260420_009",
+    "title": "关于我行信用卡业务系统升级维护的通告",
+    "originalTitle": "关于我行信用卡业务系统升级维护的通告",
+    "href": "https://creditcard.citicbank.cn/gonggao/news_260420.shtml",
+    "source": "CITIC",
+    "sourceLabel": "💳 中信信用卡",
+    "category": "系统维护",
+    "time": "2026-04-20",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "中信银行信用卡中心"
+  },
+  {
+    "id": "citic_20260416_010",
+    "title": "关于调整“中信银行颜卡GO主题信用卡”首次取现优惠权益的通知",
+    "originalTitle": "关于调整“中信银行颜卡GO主题信用卡”首次取现优惠权益的通知",
+    "href": "https://creditcard.citicbank.cn/gonggao/news_260416.shtml",
+    "source": "CITIC",
+    "sourceLabel": "💳 中信信用卡",
+    "category": "权益调整",
+    "time": "2026-04-16",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "中信银行信用卡中心"
+  },
+  {
+    "id": "citic_20260415_011",
+    "title": "关于调整中信银行国泰航空联名信用卡、中信银行亚洲万里通联名信用卡部分专属权益的公告",
+    "originalTitle": "关于调整中信银行国泰航空联名信用卡、中信银行亚洲万里通联名信用卡部分专属权益的公告",
+    "href": "https://creditcard.citicbank.cn/gonggao/news_260415.shtml",
+    "source": "CITIC",
+    "sourceLabel": "💳 中信信用卡",
+    "category": "权益调整",
+    "time": "2026-04-15",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "中信银行信用卡中心"
+  },
+  {
+    "id": "citic_20260414_012",
+    "title": "关于现金分期业务调整还款方式的公告",
+    "originalTitle": "关于现金分期业务调整还款方式的公告",
+    "href": "https://creditcard.citicbank.cn/gonggao/news_260414.shtml",
+    "source": "CITIC",
+    "sourceLabel": "💳 中信信用卡",
+    "category": "分期业务",
+    "time": "2026-04-14",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "中信银行信用卡中心"
+  },
+  {
+    "id": "citic_20260410_013",
+    "title": "关于个人资信信息（含个人信用信息）处理授权书更新的公告",
+    "originalTitle": "关于个人资信信息（含个人信用信息）处理授权书更新的公告",
+    "href": "https://creditcard.citicbank.cn/gonggao/news_260410.shtml",
+    "source": "CITIC",
+    "sourceLabel": "💳 中信信用卡",
+    "category": "隐私政策",
+    "time": "2026-04-10",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "中信银行信用卡中心"
+  },
+  {
+    "id": "citic_20260407_014",
+    "title": "关于银联地铁公交行业快速通关业务（ODA）服务调整的公告",
+    "originalTitle": "关于银联地铁公交行业快速通关业务（ODA）服务调整的公告",
+    "href": "https://creditcard.citicbank.cn/gonggao/news_260407.shtml",
+    "source": "CITIC",
+    "sourceLabel": "💳 中信信用卡",
+    "category": "信用卡公告",
+    "time": "2026-04-07",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "中信银行信用卡中心"
+  },
+  {
+    "id": "citic_20260320_015",
+    "title": "关于开展微信多笔立减营销活动相关事宜的公告",
+    "originalTitle": "关于开展微信多笔立减营销活动相关事宜的公告",
+    "href": "https://creditcard.citicbank.cn/gonggao/news_260320.shtml",
+    "source": "CITIC",
+    "sourceLabel": "💳 中信信用卡",
+    "category": "支付平台",
+    "time": "2026-03-20",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "中信银行信用卡中心"
+  },
+  {
+    "id": "citic_20260317_016",
+    "title": "关于新增“随心用”优选增值服务的公告",
+    "originalTitle": "关于新增“随心用”优选增值服务的公告",
+    "href": "https://creditcard.citicbank.cn/gonggao/news_260317.shtml",
+    "source": "CITIC",
+    "sourceLabel": "💳 中信信用卡",
+    "category": "信用卡公告",
+    "time": "2026-03-17",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "中信银行信用卡中心"
+  },
+  {
+    "id": "citic_20260312_017",
+    "title": "关于新增汽车分期业务还款方式的公告",
+    "originalTitle": "关于新增汽车分期业务还款方式的公告",
+    "href": "https://creditcard.citicbank.cn/gonggao/news_260312.shtml",
+    "source": "CITIC",
+    "sourceLabel": "💳 中信信用卡",
+    "category": "分期业务",
+    "time": "2026-03-12",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "中信银行信用卡中心"
+  },
+  {
+    "id": "citic_20260306_018",
+    "title": "中信银行信用卡手机闪付交易限额调整公告",
+    "originalTitle": "中信银行信用卡手机闪付交易限额调整公告",
+    "href": "https://creditcard.citicbank.cn/gonggao/news_260306.shtml",
+    "source": "CITIC",
+    "sourceLabel": "💳 中信信用卡",
+    "category": "支付平台",
+    "time": "2026-03-06",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "中信银行信用卡中心"
+  },
+  {
+    "id": "citic_20260305_019",
+    "title": "关于调整第三方平台快捷支付交易限额的通知",
+    "originalTitle": "关于调整第三方平台快捷支付交易限额的通知",
+    "href": "https://creditcard.citicbank.cn/gonggao/news_260305.shtml",
+    "source": "CITIC",
+    "sourceLabel": "💳 中信信用卡",
+    "category": "支付平台",
+    "time": "2026-03-05",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "中信银行信用卡中心"
+  },
+  {
+    "id": "citic_20260304_020",
+    "title": "关于高端信用卡Priority Pass全球机场休息厅权益服务升级的公告",
+    "originalTitle": "关于高端信用卡Priority Pass全球机场休息厅权益服务升级的公告",
+    "href": "https://creditcard.citicbank.cn/gonggao/news_260304_2.shtml",
+    "source": "CITIC",
+    "sourceLabel": "💳 中信信用卡",
+    "category": "权益调整",
+    "time": "2026-03-04",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "中信银行信用卡中心"
+  },
+  {
+    "id": "citic_20260304_021",
+    "title": "关于中信银行私人银行白金信用卡权益调整的公告",
+    "originalTitle": "关于中信银行私人银行白金信用卡权益调整的公告",
+    "href": "https://creditcard.citicbank.cn/gonggao/news_260304.shtml",
+    "source": "CITIC",
+    "sourceLabel": "💳 中信信用卡",
+    "category": "权益调整",
+    "time": "2026-03-04",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "中信银行信用卡中心"
+  },
+  {
+    "id": "citic_20260206_022",
+    "title": "关于随借金产品取消收费服务项目的公告",
+    "originalTitle": "关于随借金产品取消收费服务项目的公告",
+    "href": "https://creditcard.citicbank.cn/gonggao/news_260206.shtml",
+    "source": "CITIC",
+    "sourceLabel": "💳 中信信用卡",
+    "category": "信用卡公告",
+    "time": "2026-02-06",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "中信银行信用卡中心"
+  },
+  {
+    "id": "citic_20260204_023",
+    "title": "关于中信银行信用卡中心短信端口号的公告（260204）",
+    "originalTitle": "关于中信银行信用卡中心短信端口号的公告（260204）",
+    "href": "https://creditcard.citicbank.cn/gonggao/news_260204.shtml",
+    "source": "CITIC",
+    "sourceLabel": "💳 中信信用卡",
+    "category": "信用卡公告",
+    "time": "2026-02-04",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "中信银行信用卡中心"
+  },
+  {
+    "id": "citic_20260203_024",
+    "title": "“境外刷Visa卡最高返30%活动”及“Visa留学返现活动”2025年7-12月达标客户公示",
+    "originalTitle": "“境外刷Visa卡最高返30%活动”及“Visa留学返现活动”2025年7-12月达标客户公示",
+    "href": "https://creditcard.citicbank.cn/gonggao/news_260203_3.shtml",
+    "source": "CITIC",
+    "sourceLabel": "💳 中信信用卡",
+    "category": "营销活动",
+    "time": "2026-02-03",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "中信银行信用卡中心"
+  },
+  {
+    "id": "citic_20260203_025",
+    "title": "“境外刷万事达卡最高返4570美元活动”2025年7-12月达标客户公示",
+    "originalTitle": "“境外刷万事达卡最高返4570美元活动”2025年7-12月达标客户公示",
+    "href": "https://creditcard.citicbank.cn/gonggao/news_260203_2.shtml",
+    "source": "CITIC",
+    "sourceLabel": "💳 中信信用卡",
+    "category": "营销活动",
+    "time": "2026-02-03",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "中信银行信用卡中心"
+  },
+  {
+    "id": "citic_20260121_026",
+    "title": "中信银行信用卡中心关于账单分期还款财政贴息政策持卡人关注问题解答",
+    "originalTitle": "中信银行信用卡中心关于账单分期还款财政贴息政策持卡人关注问题解答",
+    "href": "https://creditcard.citicbank.cn/gonggao/news_260121_2.shtml",
+    "source": "CITIC",
+    "sourceLabel": "💳 中信信用卡",
+    "category": "分期业务",
+    "time": "2026-01-21",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "中信银行信用卡中心"
+  },
+  {
+    "id": "citic_20260121_027",
+    "title": "中信银行信用卡中心关于开展账单分期还款业务财政贴息工作的公告",
+    "originalTitle": "中信银行信用卡中心关于开展账单分期还款业务财政贴息工作的公告",
+    "href": "https://creditcard.citicbank.cn/gonggao/news_260121.shtml",
+    "source": "CITIC",
+    "sourceLabel": "💳 中信信用卡",
+    "category": "分期业务",
+    "time": "2026-01-21",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "中信银行信用卡中心"
+  },
+  {
+    "id": "citic_20260104_028",
+    "title": "中信银行信用卡中心“信收付Lite”微信小程序停止服务公告",
+    "originalTitle": "中信银行信用卡中心“信收付Lite”微信小程序停止服务公告",
+    "href": "https://creditcard.citicbank.cn/gonggao/news_260104.shtml",
+    "source": "CITIC",
+    "sourceLabel": "💳 中信信用卡",
+    "category": "卡片停发",
+    "time": "2026-01-04",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "中信银行信用卡中心"
+  },
+  {
+    "id": "citic_20251231_029",
+    "title": "关于“中信银行如意信用卡”更名的公告",
+    "originalTitle": "关于“中信银行如意信用卡”更名的公告",
+    "href": "https://creditcard.citicbank.cn/gonggao/news_251231.shtml",
+    "source": "CITIC",
+    "sourceLabel": "💳 中信信用卡",
+    "category": "卡片更名",
+    "time": "2025-12-31",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "中信银行信用卡中心"
+  },
+  {
+    "id": "xhs_jiulv_20260617_000",
+    "title": "高铁站免费吃喝，就靠中移动这个权益了",
+    "originalTitle": "高铁站免费吃喝，就靠中移动这个权益了",
+    "href": "https://xhslink.com/m/7M1NsursE5d",
+    "source": "酒旅情报局",
+    "sourceLabel": "📕 酒旅情报局",
+    "category": "交通出行",
+    "engagement": 3,
+    "time": "2026-06-17",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "酒旅情报局"
+  },
+  {
+    "id": "xhs_jiulv_20260615_000",
+    "title": "2026年，重点考虑这几张信用卡就够了",
+    "originalTitle": "2026年，重点考虑这几张信用卡就够了",
+    "href": "https://xhslink.com/m/7M1NsursE5d",
+    "source": "酒旅情报局",
+    "sourceLabel": "📕 酒旅情报局",
+    "category": "信用卡",
+    "engagement": 384,
+    "time": "2026-06-15",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "酒旅情报局"
+  },
+  {
+    "id": "xhs_jiulv_20260615_001",
+    "title": "凯悦闪促木棉花酒店，每晚额外得500积分",
+    "originalTitle": "凯悦闪促木棉花酒店，每晚额外得500积分",
+    "href": "https://xhslink.com/m/7M1NsursE5d",
+    "source": "酒旅情报局",
+    "sourceLabel": "📕 酒旅情报局",
+    "category": "凯悦",
+    "engagement": 10,
+    "time": "2026-06-15",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "酒旅情报局"
+  },
+  {
+    "id": "xhs_jiulv_20260615_002",
+    "title": "改变一个设定，每周零成本获取东国航里程",
+    "originalTitle": "改变一个设定，每周零成本获取东国航里程",
+    "href": "https://xhslink.com/m/7M1NsursE5d",
+    "source": "酒旅情报局",
+    "sourceLabel": "📕 酒旅情报局",
+    "category": "航空里程",
+    "engagement": 5,
+    "time": "2026-06-15",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "酒旅情报局"
+  },
+  {
+    "id": "xhs_jiulv_20260615_003",
+    "title": "19888元长沙酒店早晚餐畅吃一年",
+    "originalTitle": "19888元长沙酒店早晚餐畅吃一年",
+    "href": "https://xhslink.com/m/7M1NsursE5d",
+    "source": "酒旅情报局",
+    "sourceLabel": "📕 酒旅情报局",
+    "category": "餐饮美食",
+    "engagement": 12,
+    "time": "2026-06-15",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "酒旅情报局"
+  },
+  {
+    "id": "xhs_jiulv_20260615_004",
+    "title": "下手前三思东航里程6.6折限时兑换",
+    "originalTitle": "下手前三思东航里程6.6折限时兑换",
+    "href": "https://xhslink.com/m/7M1NsursE5d",
+    "source": "酒旅情报局",
+    "sourceLabel": "📕 酒旅情报局",
+    "category": "航空里程",
+    "engagement": 6,
+    "time": "2026-06-15",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "酒旅情报局"
+  },
+  {
+    "id": "xhs_jiulv_20260614_005",
+    "title": "抓紧大量洲际旗下酒店旺季还没调价",
+    "originalTitle": "抓紧大量洲际旗下酒店旺季还没调价",
+    "href": "https://xhslink.com/m/7M1NsursE5d",
+    "source": "酒旅情报局",
+    "sourceLabel": "📕 酒旅情报局",
+    "category": "洲际",
+    "engagement": 8,
+    "time": "2026-06-14",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "酒旅情报局"
+  },
+  {
+    "id": "xhs_jiulv_20260614_006",
+    "title": "又中了每月无成本薅羊毛，中行全卡适用",
+    "originalTitle": "又中了每月无成本薅羊毛，中行全卡适用",
+    "href": "https://xhslink.com/m/7M1NsursE5d",
+    "source": "酒旅情报局",
+    "sourceLabel": "📕 酒旅情报局",
+    "category": "信用卡",
+    "engagement": 12,
+    "time": "2026-06-14",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "酒旅情报局"
+  },
+  {
+    "id": "xhs_jiulv_20260614_007",
+    "title": "10888元上海浦东酒店早午餐畅吃一年",
+    "originalTitle": "10888元上海浦东酒店早午餐畅吃一年",
+    "href": "https://xhslink.com/m/7M1NsursE5d",
+    "source": "酒旅情报局",
+    "sourceLabel": "📕 酒旅情报局",
+    "category": "餐饮美食",
+    "engagement": 10,
+    "time": "2026-06-14",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "酒旅情报局"
+  },
+  {
+    "id": "xhs_jiulv_20260614_008",
+    "title": "至高752元万豪世界杯惊喜福利",
+    "originalTitle": "至高752元万豪世界杯惊喜福利",
+    "href": "https://xhslink.com/m/7M1NsursE5d",
+    "source": "酒旅情报局",
+    "sourceLabel": "📕 酒旅情报局",
+    "category": "万豪",
+    "engagement": 6,
+    "time": "2026-06-14",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "酒旅情报局"
+  },
+  {
+    "id": "xhs_jiulv_20260614_009",
+    "title": "29888元丽思卡尔顿早餐畅吃一年",
+    "originalTitle": "29888元丽思卡尔顿早餐畅吃一年",
+    "href": "https://xhslink.com/m/7M1NsursE5d",
+    "source": "酒旅情报局",
+    "sourceLabel": "📕 酒旅情报局",
+    "category": "丽思卡尔顿",
+    "engagement": 26,
+    "time": "2026-06-14",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "酒旅情报局"
+  },
+  {
+    "id": "xhs_jiulv_20260613_010",
+    "title": "9999元包年常州万豪系酒店早餐游泳健身",
+    "originalTitle": "9999元包年常州万豪系酒店早餐游泳健身",
+    "href": "https://xhslink.com/m/7M1NsursE5d",
+    "source": "酒旅情报局",
+    "sourceLabel": "📕 酒旅情报局",
+    "category": "万豪",
+    "engagement": 10,
+    "time": "2026-06-13",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "酒旅情报局"
+  },
+  {
+    "id": "xhs_jiulv_20260613_011",
+    "title": "12888元上海两大洲际酒店早餐畅吃一年",
+    "originalTitle": "12888元上海两大洲际酒店早餐畅吃一年",
+    "href": "https://xhslink.com/m/7M1NsursE5d",
+    "source": "酒旅情报局",
+    "sourceLabel": "📕 酒旅情报局",
+    "category": "洲际",
+    "engagement": 24,
+    "time": "2026-06-13",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "酒旅情报局"
+  },
+  {
+    "id": "xhs_jiulv_20260613_012",
+    "title": "沈阳君悦899元住一晚，送899元餐饮额度",
+    "originalTitle": "沈阳君悦899元住一晚，送899元餐饮额度",
+    "href": "https://xhslink.com/m/7M1NsursE5d",
+    "source": "酒旅情报局",
+    "sourceLabel": "📕 酒旅情报局",
+    "category": "君悦",
+    "engagement": 9,
+    "time": "2026-06-13",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "酒旅情报局"
+  },
+  {
+    "id": "xhs_jiulv_20260613_013",
+    "title": "国内机票燃油附加费，6月5日起下调",
+    "originalTitle": "国内机票燃油附加费，6月5日起下调",
+    "href": "https://xhslink.com/m/7M1NsursE5d",
+    "source": "酒旅情报局",
+    "sourceLabel": "📕 酒旅情报局",
+    "category": "交通出行",
+    "engagement": 9,
+    "time": "2026-06-13",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "酒旅情报局"
+  },
+  {
+    "id": "xhs_jiulv_20260613_014",
+    "title": "287元，洲际酒店IC都便宜成这样了",
+    "originalTitle": "287元，洲际酒店IC都便宜成这样了",
+    "href": "https://xhslink.com/m/7M1NsursE5d",
+    "source": "酒旅情报局",
+    "sourceLabel": "📕 酒旅情报局",
+    "category": "洲际",
+    "engagement": 10,
+    "time": "2026-06-13",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "酒旅情报局"
+  },
+  {
+    "id": "xhs_jiulv_20260612_015",
+    "title": "亚朵酒店免费提供隐藏摄像头检测仪怎么看",
+    "originalTitle": "亚朵酒店免费提供隐藏摄像头检测仪怎么看",
+    "href": "https://xhslink.com/m/7M1NsursE5d",
+    "source": "酒旅情报局",
+    "sourceLabel": "📕 酒旅情报局",
+    "category": "亚朵",
+    "engagement": 9,
+    "time": "2026-06-12",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "酒旅情报局"
+  },
+  {
+    "id": "xhs_jiulv_20260612_016",
+    "title": "12888元酒店自助餐每日三餐畅吃一年",
+    "originalTitle": "12888元酒店自助餐每日三餐畅吃一年",
+    "href": "https://xhslink.com/m/7M1NsursE5d",
+    "source": "酒旅情报局",
+    "sourceLabel": "📕 酒旅情报局",
+    "category": "餐饮美食",
+    "engagement": 134,
+    "time": "2026-06-12",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "酒旅情报局"
+  },
+  {
+    "id": "xhs_jiulv_20260612_017",
+    "title": "希尔顿Q2大促上线住一次至高奖励4000分",
+    "originalTitle": "希尔顿Q2大促上线住一次至高奖励4000分",
+    "href": "https://xhslink.com/m/7M1NsursE5d",
+    "source": "酒旅情报局",
+    "sourceLabel": "📕 酒旅情报局",
+    "category": "希尔顿",
+    "engagement": 10,
+    "time": "2026-06-12",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "酒旅情报局"
+  },
+  {
+    "id": "xhs_jiulv_20260612_018",
+    "title": "至高送50000积分中信万豪联名新活动",
+    "originalTitle": "至高送50000积分中信万豪联名新活动",
+    "href": "https://xhslink.com/m/7M1NsursE5d",
+    "source": "酒旅情报局",
+    "sourceLabel": "📕 酒旅情报局",
+    "category": "信用卡",
+    "engagement": 18,
+    "time": "2026-06-12",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "酒旅情报局"
+  },
+  {
+    "id": "xhs_jiulv_20260612_019",
+    "title": "大量4500分凯悦旗下，徐汇滨江逸扉酒店",
+    "originalTitle": "大量4500分凯悦旗下，徐汇滨江逸扉酒店",
+    "href": "https://xhslink.com/m/7M1NsursE5d",
+    "source": "酒旅情报局",
+    "sourceLabel": "📕 酒旅情报局",
+    "category": "凯悦",
+    "engagement": 9,
+    "time": "2026-06-12",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "酒旅情报局"
+  },
+  {
+    "id": "xhs_jiulv_20260611_020",
+    "title": "持平史低价洲际酒店积分买一送一",
+    "originalTitle": "持平史低价洲际酒店积分买一送一",
+    "href": "https://xhslink.com/m/7M1NsursE5d",
+    "source": "酒旅情报局",
+    "sourceLabel": "📕 酒旅情报局",
+    "category": "洲际",
+    "engagement": 14,
+    "time": "2026-06-11",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "酒旅情报局"
+  },
+  {
+    "id": "xhs_jiulv_20260611_021",
+    "title": "阳朔糖舍、丽江璞修雪山加入设计酒店联盟",
+    "originalTitle": "阳朔糖舍、丽江璞修雪山加入设计酒店联盟",
+    "href": "https://xhslink.com/m/7M1NsursE5d",
+    "source": "酒旅情报局",
+    "sourceLabel": "📕 酒旅情报局",
+    "category": "酒旅资讯",
+    "engagement": 16,
+    "time": "2026-06-11",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "酒旅情报局"
+  },
+  {
+    "id": "xhs_jiulv_20260611_022",
+    "title": "机会花经济快捷的钱住奢华酒店",
+    "originalTitle": "机会花经济快捷的钱住奢华酒店",
+    "href": "https://xhslink.com/m/7M1NsursE5d",
+    "source": "酒旅情报局",
+    "sourceLabel": "📕 酒旅情报局",
+    "category": "酒旅资讯",
+    "engagement": 8,
+    "time": "2026-06-11",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "酒旅情报局"
+  },
+  {
+    "id": "xhs_jiulv_20260611_023",
+    "title": "高铁机票涨价到肉疼省钱捡漏怪招送上",
+    "originalTitle": "高铁机票涨价到肉疼省钱捡漏怪招送上",
+    "href": "https://xhslink.com/m/7M1NsursE5d",
+    "source": "酒旅情报局",
+    "sourceLabel": "📕 酒旅情报局",
+    "category": "交通出行",
+    "engagement": 7,
+    "time": "2026-06-11",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "酒旅情报局"
+  },
+  {
+    "id": "xhs_jiulv_20260611_024",
+    "title": "突发iPhone17 Pro全系列突降1000元",
+    "originalTitle": "突发iPhone17 Pro全系列突降1000元",
+    "href": "https://xhslink.com/m/7M1NsursE5d",
+    "source": "酒旅情报局",
+    "sourceLabel": "📕 酒旅情报局",
+    "category": "数码",
+    "engagement": 11,
+    "time": "2026-06-11",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "酒旅情报局"
+  },
+  {
+    "id": "xhs_jiulv_20260610_025",
+    "title": "坏消息机票盲盒全面涨价，燃油税太高了",
+    "originalTitle": "坏消息机票盲盒全面涨价，燃油税太高了",
+    "href": "https://xhslink.com/m/7M1NsursE5d",
+    "source": "酒旅情报局",
+    "sourceLabel": "📕 酒旅情报局",
+    "category": "交通出行",
+    "engagement": 6,
+    "time": "2026-06-10",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "酒旅情报局"
+  },
+  {
+    "id": "xhs_jiulv_20260610_026",
+    "title": "大量12306积分差点过期各位一定要重视啊",
+    "originalTitle": "大量12306积分差点过期各位一定要重视啊",
+    "href": "https://xhslink.com/m/7M1NsursE5d",
+    "source": "酒旅情报局",
+    "sourceLabel": "📕 酒旅情报局",
+    "category": "航空里程",
+    "engagement": 12,
+    "time": "2026-06-10",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "酒旅情报局"
+  },
+  {
+    "id": "xhs_jiulv_20260610_027",
+    "title": "浦东机场吉祥航空86号贵宾室最近不要去了",
+    "originalTitle": "浦东机场吉祥航空86号贵宾室最近不要去了",
+    "href": "https://xhslink.com/m/7M1NsursE5d",
+    "source": "酒旅情报局",
+    "sourceLabel": "📕 酒旅情报局",
+    "category": "航空里程",
+    "engagement": 17,
+    "time": "2026-06-10",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "酒旅情报局"
+  },
+  {
+    "id": "xhs_jiulv_20260610_028",
+    "title": "再刷苏州，睡进了一家真正的园林酒店",
+    "originalTitle": "再刷苏州，睡进了一家真正的园林酒店",
+    "href": "https://xhslink.com/m/7M1NsursE5d",
+    "source": "酒旅情报局",
+    "sourceLabel": "📕 酒旅情报局",
+    "category": "酒旅资讯",
+    "engagement": 20,
+    "time": "2026-06-10",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "酒旅情报局"
+  },
+  {
+    "id": "xhs_jiulv_20260610_029",
+    "title": "万豪5月首次闪促291家、至高送3万积分",
+    "originalTitle": "万豪5月首次闪促291家、至高送3万积分",
+    "href": "https://xhslink.com/m/7M1NsursE5d",
+    "source": "酒旅情报局",
+    "sourceLabel": "📕 酒旅情报局",
+    "category": "万豪",
+    "engagement": 55,
+    "time": "2026-06-10",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "酒旅情报局"
+  },
+  {
+    "id": "xhs_jiulv_20260609_030",
+    "title": "我用这招，成功避雷90%所谓网红美食",
+    "originalTitle": "我用这招，成功避雷90%所谓网红美食",
+    "href": "https://xhslink.com/m/7M1NsursE5d",
+    "source": "酒旅情报局",
+    "sourceLabel": "📕 酒旅情报局",
+    "category": "餐饮美食",
+    "engagement": 20,
+    "time": "2026-06-09",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "酒旅情报局"
+  },
+  {
+    "id": "XHS_LAoya_20260618_000",
+    "title": "所有人都能炒拿 宝食 一家红宝石 又回来了",
+    "originalTitle": "所有人都能炒拿 宝食 一家红宝石 又回来了",
+    "href": "https://xhslink.com/m/83avacopDgK",
+    "source": "老鸭唐纳德",
+    "sourceLabel": "📕 老鸭唐纳德",
+    "category": "信用卡",
+    "engagement": 0,
+    "time": "2026-06-18",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "老鸭唐纳德"
+  },
+  {
+    "id": "XHS_LAoya_20260618_001",
+    "title": "打开万豪官网订房",
+    "originalTitle": "打开万豪官网订房",
+    "href": "https://xhslink.com/m/83avacopDgK",
+    "source": "老鸭唐纳德",
+    "sourceLabel": "📕 老鸭唐纳德",
+    "category": "万豪",
+    "engagement": 0,
+    "time": "2026-06-18",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "老鸭唐纳德"
+  },
+  {
+    "id": "XHS_LAoya_20260618_002",
+    "title": "Amex坐北广地铁 一天减2块",
+    "originalTitle": "Amex坐北广地铁 一天减2块",
+    "href": "https://xhslink.com/m/83avacopDgK",
+    "source": "老鸭唐纳德",
+    "sourceLabel": "📕 老鸭唐纳德",
+    "category": "信用卡",
+    "engagement": 0,
+    "time": "2026-06-18",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "老鸭唐纳德"
+  },
+  {
+    "id": "XHS_XIYOU_20260618_000",
+    "title": "阿那亚（置顶）",
+    "originalTitle": "阿那亚（置顶）",
+    "href": "https://xhslink.com/m/9CdfGu12pkN",
+    "source": "嬉游小助理",
+    "sourceLabel": "📕 嬉游小助理",
+    "category": "旅游",
+    "engagement": 0,
+    "time": "2026-06-18",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "嬉游小助理"
+  },
+  {
+    "id": "XHS_XIYOU_20260618_001",
+    "title": "风景笔记（图片）",
+    "originalTitle": "风景笔记（图片）",
+    "href": "https://xhslink.com/m/9CdfGu12pkN",
+    "source": "嬉游小助理",
+    "sourceLabel": "📕 嬉游小助理",
+    "category": "旅游",
+    "engagement": 0,
+    "time": "2026-06-18",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "嬉游小助理"
+  },
+  {
+    "id": "XHS_CONGTOU_20260618_000",
+    "title": "葱头旅游羊毛（置顶自我介绍）",
+    "originalTitle": "葱头旅游羊毛（置顶自我介绍）",
+    "href": "https://xhslink.com/m/3sYXuoPB9PG",
+    "source": "葱头的旅游羊毛",
+    "sourceLabel": "📕 葱头的旅游羊毛",
+    "category": "自我介绍",
+    "engagement": 0,
+    "time": "2026-06-18",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "葱头的旅游羊毛"
+  },
+  {
+    "id": "XHS_CONGTOU_20260618_001",
+    "title": "全球国航（置顶）",
+    "originalTitle": "全球国航（置顶）",
+    "href": "https://xhslink.com/m/3sYXuoPB9PG",
+    "source": "葱头的旅游羊毛",
+    "sourceLabel": "📕 葱头的旅游羊毛",
+    "category": "航空",
+    "engagement": 0,
+    "time": "2026-06-18",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "葱头的旅游羊毛"
+  },
+  {
+    "id": "XHS_CONGTOU_20260618_002",
+    "title": "上海→伊斯坦布尔 航班信息",
+    "originalTitle": "上海→伊斯坦布尔 航班信息",
+    "href": "https://xhslink.com/m/3sYXuoPB9PG",
+    "source": "葱头的旅游羊毛",
+    "sourceLabel": "📕 葱头的旅游羊毛",
+    "category": "机票",
+    "engagement": 0,
+    "time": "2026-06-18",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "葱头的旅游羊毛"
+  },
+  {
+    "id": "XHS_CONGTOU_20260618_003",
+    "title": "上海→莫斯科 航班信息",
+    "originalTitle": "上海→莫斯科 航班信息",
+    "href": "https://xhslink.com/m/3sYXuoPB9PG",
+    "source": "葱头的旅游羊毛",
+    "sourceLabel": "📕 葱头的旅游羊毛",
+    "category": "机票",
+    "engagement": 0,
+    "time": "2026-06-18",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "葱头的旅游羊毛"
+  },
+  {
+    "id": "XHS_TUZI_20260618_000",
+    "title": "四季酒店 Four Seasons（置顶）",
+    "originalTitle": "四季酒店 Four Seasons（置顶）",
+    "href": "https://xhslink.com/m/7B8CVnVcyno",
+    "source": "一只酒店旅行兔",
+    "sourceLabel": "📕 一只酒店旅行兔",
+    "category": "酒店",
+    "engagement": 0,
+    "time": "2026-06-18",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "一只酒店旅行兔"
+  },
+  {
+    "id": "XHS_TUZI_20260618_001",
+    "title": "文华东方 Mandarin Oriental（置顶）",
+    "originalTitle": "文华东方 Mandarin Oriental（置顶）",
+    "href": "https://xhslink.com/m/7B8CVnVcyno",
+    "source": "一只酒店旅行兔",
+    "sourceLabel": "📕 一只酒店旅行兔",
+    "category": "酒店",
+    "engagement": 0,
+    "time": "2026-06-18",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "一只酒店旅行兔"
+  },
+  {
+    "id": "XHS_TUZI_20260618_002",
+    "title": "酒店图片笔记",
+    "originalTitle": "酒店图片笔记",
+    "href": "https://xhslink.com/m/7B8CVnVcyno",
+    "source": "一只酒店旅行兔",
+    "sourceLabel": "📕 一只酒店旅行兔",
+    "category": "酒店",
+    "engagement": 0,
+    "time": "2026-06-18",
+    "sortTime": "2026-06-20",
+    "updateTime": "2026-06-20 10:50:00",
+    "author": "一只酒店旅行兔"
+  }
+
+];
+
+
+      const sourceLabels = {
+        'CARNOC': '民航新闻',
+        'LOYALTYLOBBY': '常旅客资讯',
+        'CEIC': '地震快讯',
+        '驻泰使馆': '使馆领事',
+        'CMB': '招行信用卡',
+        'CITIC': '中信信用卡',
+        '酒旅情报局': '酒旅情报局',
+        'RAIL_12306': '12306铁路',
+        'BOCOM': '交行信用卡'
+      };
+      const sourceBadgeColors = {
+        'CARNOC': 'source-carnoc',
+        'LOYALTYLOBBY': 'source-loyalty',
+        'CEIC': 'source-ceic',
+        '驻泰使馆': 'source-embassy',
+        'CMB': 'source-cmb',
+        'CITIC': 'source-citic',
+        '酒旅情报局': 'source-xhs',
+        'RAIL_12306': 'source-rail',
+        'BOCOM': 'source-bocom'
+      };
+
+      const STORAGE_KEY = 'travel_dashboard_v2';
+
+      const sourceGroups = {
+        '信用卡': { label: '信用卡', sources: ['CMB', 'CITIC', 'BOCOM'] },
+        '达人': { label: '达人', sources: ['酒旅情报局', '老鸭唐纳德', '嬉游小助理', '葱头的旅游羊毛', '一只酒店旅行兔'] }
+      };
+      const sourceToGroup = {
+        'CMB': '信用卡',
+        'CITIC': '信用卡',
+        'BOCOM': '信用卡',
+        '酒旅情报局': '达人',
+        '老鸭唐纳德': '达人',
+        '嬉游小助理': '达人',
+        '葱头的旅游羊毛': '达人',
+        '一只酒店旅行兔': '达人'
+      };
+
+      let currentPage = 1;
+      let pageSize = 20;
+      let activeGroupFilter = null;
+      let activeSourceFilter = null;
+      let allData = [];
+
+      function escapeHtml(str) {
+        if (!str) return '';
+        return str.toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      }
+
+      function loadData() {
+        let stored = localStorage.getItem(STORAGE_KEY);
+        let userData = [];
+        if (stored) {
+          try { userData = JSON.parse(stored); } catch(e) {}
+          if (!Array.isArray(userData)) userData = [];
+        }
+        const seedIds = new Set(SEED_DATA.map(function(item){ return item.id; }));
+        const filtered = userData.filter(function(item){
+          return item && item.id && !seedIds.has(item.id);
+        });
+        const merged = SEED_DATA.concat(filtered);
+        merged.sort(function(a, b){
+          const ta = a.sortTime || '1970-01-01';
+          const tb = b.sortTime || '1970-01-01';
+          if (tb > ta) return 1;
+          if (tb < ta) return -1;
+          return 0;
+        });
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+        allData = merged;
+        return merged;
+      }
+
+      function deleteItem(id) {
+        if (!confirm('确定删除此条目？')) return;
+        let stored = localStorage.getItem(STORAGE_KEY);
+        if (!stored) return;
+        let arr = [];
+        try { arr = JSON.parse(stored); } catch(e) { return; }
+        if (!Array.isArray(arr)) return;
+        arr = arr.filter(function(item){ return item && item.id !== id; });
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+        allData = arr;
+        render();
+      }
+
+      function filterByGroup(group) {
+        if (activeGroupFilter === group) {
+          activeGroupFilter = null;
+          activeSourceFilter = null;
+        } else {
+          activeGroupFilter = group;
+          activeSourceFilter = null;
+        }
+        currentPage = 1;
+        render();
+      }
+
+      function filterBySource(source) {
+        const grp = sourceToGroup[source] || null;
+        if (activeSourceFilter === source) {
+          activeSourceFilter = null;
+          if (grp && activeGroupFilter === grp) {
+            activeGroupFilter = null;
+          }
+        } else {
+          activeSourceFilter = source;
+          if (grp) {
+            activeGroupFilter = grp;
+          } else {
+            activeGroupFilter = null;
+          }
+        }
+        currentPage = 1;
+        render();
+      }
+
+      function render() {
+        const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
+        let filtered = allData;
+        if (activeSourceFilter) {
+          filtered = filtered.filter(function(item){
+            return item.source === activeSourceFilter;
+          });
+        } else if (activeGroupFilter) {
+          const groupSources = sourceGroups[activeGroupFilter].sources;
+          filtered = filtered.filter(function(item){
+            return groupSources.indexOf(item.source) !== -1;
+          });
+        }
+        if (keyword) {
+          filtered = filtered.filter(function(item){
+            const text = (item.title || '') + ' ' + (item.originalTitle || '') + ' ' + (item.category || '') + ' ' + (item.location || '') + ' ' + (item.content || '') + ' ' + (item.keywords || []).join(' ');
+            return text.toLowerCase().indexOf(keyword) !== -1;
+          });
+        }
+
+        const total = filtered.length;
+        const totalPages = Math.max(1, Math.ceil(total / pageSize));
+        if (currentPage > totalPages) currentPage = totalPages;
+        const start = (currentPage - 1) * pageSize;
+        const end = start + pageSize;
+        const pageItems = filtered.slice(start, end);
+
+        const counts = {};
+        allData.forEach(function(item){
+          const s = item.source || 'UNKNOWN';
+          counts[s] = (counts[s] || 0) + 1;
+        });
+
+        // Build top-level stat cards
+        let statsHtml = '';
+        statsHtml += '<div class="stat-card stat-plain"><b>' + total + '</b>当前显示</div>';
+        statsHtml += '<div class="stat-card stat-plain"><b>' + allData.length + '</b>总条目</div>';
+
+        // All button
+        const allActive = (activeGroupFilter === null && activeSourceFilter === null);
+        statsHtml += '<div class="stat-card' + (allActive ? ' active' : '') + '" onclick="filterBySource(null)"><b>' + allData.length + '</b>全部</div>';
+
+        // Independent sources (not in any group)
+        const groupSourcesSet = new Set();
+        Object.keys(sourceGroups).forEach(function(g) {
+          sourceGroups[g].sources.forEach(function(s) { groupSourcesSet.add(s); });
+        });
+
+        Object.keys(counts).forEach(function(src){
+          if (groupSourcesSet.has(src)) return;
+          const label = sourceLabels[src] || src;
+          const isActive = (activeSourceFilter === src && activeGroupFilter === null);
+          statsHtml += '<div class="stat-card' + (isActive ? ' active' : '') + '" onclick="filterBySource(' + "'" + escapeHtml(src) + "'" + ')"><b>' + counts[src] + '</b>' + escapeHtml(label) + '</div>';
+        });
+
+        // Group-level cards
+        Object.keys(sourceGroups).forEach(function(grp){
+          const grpDef = sourceGroups[grp];
+          let grpCount = 0;
+          grpDef.sources.forEach(function(s){ grpCount += (counts[s] || 0); });
+          const isGrpActive = (activeGroupFilter === grp && activeSourceFilter === null);
+          statsHtml += '<div class="stat-card' + (isGrpActive ? ' active' : '') + '" onclick="filterByGroup(' + "'" + escapeHtml(grp) + "'" + ')"><b>' + grpCount + '</b>' + escapeHtml(grpDef.label) + '</div>';
+        });
+
+        document.getElementById('stats').innerHTML = statsHtml;
+
+        // Sub-group row (if a group is selected)
+        if (activeGroupFilter && sourceGroups[activeGroupFilter]) {
+          let subHtml = '<div style="margin-top:8px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">';
+          subHtml += '<span style="font-size:12px;color:#888;padding-left:4px;">' + escapeHtml(sourceGroups[activeGroupFilter].label) + '：</span>';
+
+          // "All within group" button
+          const allInGroupActive = (activeGroupFilter && activeSourceFilter === null);
+          let grpTotal = 0;
+          sourceGroups[activeGroupFilter].sources.forEach(function(s){ grpTotal += (counts[s] || 0); });
+          subHtml += '<div class="stat-card sub-stat' + (allInGroupActive ? ' active' : '') + '" onclick="filterByGroup(' + "'" + escapeHtml(activeGroupFilter) + "'" + ')"><b>' + grpTotal + '</b>全部' + escapeHtml(sourceGroups[activeGroupFilter].label) + '</div>';
+
+          sourceGroups[activeGroupFilter].sources.forEach(function(src){
+            const label = sourceLabels[src] || src;
+            const isActive = (activeSourceFilter === src);
+            subHtml += '<div class="stat-card sub-stat' + (isActive ? ' active' : '') + '" onclick="filterBySource(' + "'" + escapeHtml(src) + "'" + ')"><b>' + (counts[src] || 0) + '</b>' + escapeHtml(label) + '</div>';
+          });
+
+          subHtml += '</div>';
+          document.getElementById('stats').innerHTML = statsHtml + subHtml;
+        }
+
+        let tbody = '';
+        if (pageItems.length === 0) {
+          tbody = '<tr><td colspan="5" class="empty">暂无数据</td></tr>';
+        } else {
+          pageItems.forEach(function(item) {
+            let sourceClass = sourceBadgeColors[item.source] || 'source-carnoc';
+
+            let typeClass = 'badge-carnoc';
+            if (item.source === 'CEIC') {
+              if (item.type === '国内 \u22655级') typeClass = 'badge-eq-domestic';
+              else typeClass = 'badge-eq-intl';
+            } else if (item.source === 'LOYALTYLOBBY') {
+              typeClass = 'badge-loyalty';
+            } else if (item.source === '驻泰使馆') {
+              typeClass = 'badge-embassy';
+            } else if (item.source === 'CMB') {
+              typeClass = 'badge-cmb';
+            } else if (item.source === 'CITIC') {
+              typeClass = 'badge-citic';
+            } else if (item.source === '酒旅情报局') {
+              typeClass = 'badge-xhs';
+            } else if (item.source === 'RAIL_12306') {
+              typeClass = 'badge-rail';
+            } else if (item.source === '老鸭唐纳德') {
+              typeClass = 'badge-xhs-laoya';
+            } else if (item.source === '嬉游小助理') {
+              typeClass = 'badge-xhs-xiyou';
+              typeClass = 'badge-xhs-xiyou';
+            } else if (item.source === '葱头的旅游羊毛') {
+              typeClass = 'badge-xhs-congtou';
+            } else if (item.source === '一只酒店旅行兔') {
+              typeClass = 'badge-xhs-tuzi';
+            } else if (item.source === 'BOCOM') {
+              typeClass = 'badge-bocom';
+            } else if (sourceBadgeColors[item.source]) {
+              typeClass = 'badge-' + item.source.toLowerCase().replace(/[^a-z]/g, '');
+            }
+
+            let typeLabel = item.type || item.category || '其他';
+            let sourceLabel = sourceLabels[item.source] || item.source || 'UNKNOWN';
+
+            let titleHtml = '<div class="title-main">' + escapeHtml(item.title) + '</div>';
+            if (item.source === 'LOYALTYLOBBY') {
+              titleHtml += '<div class="title-sub">' + escapeHtml(item.originalTitle) + ' · ' + escapeHtml(item.author) + '</div>';
+            } else if (item.source === 'CEIC') {
+              titleHtml += '<div class="title-sub">' + escapeHtml(item.originalTitle) + '</div>';
+            } else if (item.source === 'CARNOC') {
+              titleHtml += '<div class="title-sub">' + escapeHtml(item.originalTitle) + '</div>';
+            } else if (item.source === '驻泰使馆') {
+              titleHtml += '<div class="title-sub">' + escapeHtml(item.originalTitle) + ' · ' + escapeHtml(item.author) + '</div>';
+              if (item.content) {
+                titleHtml += '<div class="content-preview">' + escapeHtml(item.content) + '</div>';
+              }
+            } else if (item.source === 'CMB') {
+              titleHtml += '<div class="title-sub">' + escapeHtml(item.originalTitle) + ' · ' + escapeHtml(item.author) + '</div>';
+            } else if (item.source === 'CITIC') {
+              titleHtml += '<div class="title-sub">' + escapeHtml(item.originalTitle) + ' · ' + escapeHtml(item.author) + '</div>';
+            } else if (item.source === '酒旅情报局') {
+              titleHtml += '<div class="title-sub">' + escapeHtml(item.originalTitle) + ' · ' + escapeHtml(item.author) + ' · ' + escapeHtml(item.engagement ? item.engagement + ' ' : '') + '</div>';
+            } else if (item.source === 'RAIL_12306') {
+              titleHtml += '<div class="title-sub">' + escapeHtml(item.originalTitle) + ' · ' + escapeHtml(item.author) + '</div>';
+            } else if (item.source === '酒旅情报局' || item.source === '老鸭唐纳德' || item.source === '嬉游小助理' || item.source === '葱头的旅游羊毛' || item.source === '一只酒店旅行兔') {
+              titleHtml += '<div class="title-sub">' + escapeHtml(item.originalTitle) + ' · ' + escapeHtml(item.author) + ' · ' + escapeHtml(item.engagement ? item.engagement + ' ' : '') + '</div>';
+            } else if (item.source === 'BOCOM') {
+              titleHtml += '<div class="title-sub">' + escapeHtml(item.originalTitle) + ' · ' + escapeHtml(item.author) + '</div>';
+            }
+
+            let url = item.url || item.href || '';
+            let viewBtn = '';
+            if (url) {
+              viewBtn = '<a class="btn btn-view" href="' + escapeHtml(url) + '" target="_blank">查看原文</a>';
+            } else {
+              viewBtn = '<a class="btn btn-view" href="#" onclick="return false;">查看原文</a>';
+            }
+            let delBtn = '<button class="btn btn-del" onclick="deleteItem(' + "'" + escapeHtml(item.id) + "'" + ')">删除</button>';
+
+            tbody += '<tr>' +
+              '<td class="title-cell">' + titleHtml + '</td>' +
+              '<td><span class="source-badge ' + sourceClass + '">' + escapeHtml(sourceLabel) + '</span></td>' +
+              '<td><span class="badge ' + typeClass + '">' + escapeHtml(typeLabel) + '</span></td>' +
+              '<td class="time-cell">' + escapeHtml(item.displayTime || item.time || item.sortTime || '') + '</td>' +
+              '<td class="actions">' + viewBtn + delBtn + '</td>' +
+              '</tr>';
+          });
+        }
+        document.getElementById('tableBody').innerHTML = tbody;
+
+        let pageHtml = '<div class="page-size">每页 <select id="pageSizeSelect" onchange="changePageSize(this.value)"><option value="10"' + (pageSize === 10 ? ' selected' : '') + '>10</option><option value="20"' + (pageSize === 20 ? ' selected' : '') + '>20</option><option value="50"' + (pageSize === 50 ? ' selected' : '') + '>50</option></select> 条</div>';
+        pageHtml += '<div class="page-info">第 ' + currentPage + ' / ' + totalPages + ' 页，共 ' + total + ' 条</div>';
+        let btns = '<div class="page-btns">';
+        btns += '<button class="page-btn" onclick="goPage(1)"' + (currentPage === 1 ? ' disabled' : '') + '>首页</button>';
+        btns += '<button class="page-btn" onclick="goPage(' + (currentPage - 1) + ')"' + (currentPage === 1 ? ' disabled' : '') + '>上一页</button>';
+        for (let i = 1; i <= totalPages; i++) {
+          if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+            btns += '<button class="page-btn ' + (i === currentPage ? 'active' : '') + '" onclick="goPage(' + i + ')">' + i + '</button>';
+          } else if (i === currentPage - 3 || i === currentPage + 3) {
+            btns += '<span style="padding:6px 4px;color:#999;font-size:13px;">...</span>';
+          }
+        }
+        btns += '<button class="page-btn" onclick="goPage(' + (currentPage + 1) + ')"' + (currentPage === totalPages ? ' disabled' : '') + '>下一页</button>';
+        btns += '<button class="page-btn" onclick="goPage(' + totalPages + ')"' + (currentPage === totalPages ? ' disabled' : '') + '>末页</button>';
+        btns += '</div>';
+        pageHtml += btns;
+        document.getElementById('pagination').innerHTML = pageHtml;
+      }
+
+      function goPage(p) {
+        currentPage = p;
+        render();
+      }
+
+      function changePageSize(val) {
+        pageSize = parseInt(val, 10);
+        currentPage = 1;
+        render();
+      }
+
+      window.goPage = goPage;
+      window.changePageSize = changePageSize;
+      window.deleteItem = deleteItem;
+      window.filterBySource = filterBySource;
+      window.filterByGroup = filterByGroup;
+      window.render = render;
+
+      loadData();
+      render();
+    })();
+  </script>
+</body>
+</html>

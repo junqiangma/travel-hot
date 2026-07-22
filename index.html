@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>旅行热点 · 每日旅行情报聚合</title>
+<meta name="description" content="民航新闻、常旅客资讯、信用卡公告、铁路动态、小红书达人每日聚合">
+<style>
+:root{
+  --bg-0:#f4f5f6; --bg-1:#ffffff; --ink:#1c2733; --ink-2:#44525f; --ink-3:#8a94a0;
+  --brand:#135e6b; --brand-soft:rgba(19,94,107,.09); --border:#e2e4e7; --divider:#e9ebee;
+  --chip:#eceef0; --press:rgba(15,23,42,.05);
+  --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+}
+[data-theme="dark"]{
+  --bg-0:#10151c; --bg-1:#161d26; --ink:#e8ebf2; --ink-2:#aab4c0; --ink-3:#6b7684;
+  --brand:#4fa3b3; --brand-soft:rgba(79,163,179,.14); --border:rgba(255,255,255,.10); --divider:rgba(255,255,255,.07);
+  --chip:rgba(255,255,255,.07); --press:rgba(255,255,255,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{overflow-x:clip}
+body{background:var(--bg-0);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:760px;margin:0 auto;padding:0 18px}
+
+/* ===== top bar ===== */
+.topbar{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--bg-0) 88%,transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+.topbar-in{display:flex;align-items:center;gap:14px;height:56px}
+.logo{display:flex;align-items:baseline;gap:8px;flex-shrink:0}
+.logo b{font-size:17px;font-weight:800;letter-spacing:.02em}
+.logo span{font-family:var(--mono);font-size:10px;color:var(--ink-3);letter-spacing:.14em;text-transform:uppercase}
+.search{flex:1;display:flex;align-items:center;background:var(--chip);border:1px solid transparent;border-radius:9px;padding:6px 12px;gap:8px;min-width:0}
+.search:focus-within{border-color:var(--brand)}
+.search svg{flex-shrink:0;color:var(--ink-3)}
+.search input{flex:1;min-width:0;border:0;background:none;outline:none;color:var(--ink);font-size:13.5px;font-family:var(--sans)}
+.search input::placeholder{color:var(--ink-3)}
+.top-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.btn{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;border:1px solid var(--border);border-radius:9px;background:var(--bg-1);color:var(--ink-2);font-size:12.5px;font-weight:600;cursor:pointer;transition:background .15s}
+.btn:hover{background:var(--press)}
+.icon-btn{width:34px;padding:0;justify-content:center}
+
+/* ===== hero / stats ===== */
+.hero{padding:26px 0 6px}
+.hero h1{font-size:24px;font-weight:800;letter-spacing:-.01em}
+.hero .sub{margin-top:6px;font-size:13px;color:var(--ink-3);font-family:var(--mono);font-variant-numeric:tabular-nums}
+.hero .sub b{color:var(--brand);font-weight:700}
+
+/* ===== filter chips ===== */
+.chips{display:flex;gap:8px;overflow-x:auto;padding:14px 0 10px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex-shrink:0;padding:6px 13px;border-radius:999px;border:1px solid var(--border);background:var(--bg-1);font-size:12.5px;font-weight:600;color:var(--ink-2);cursor:pointer;user-select:none;transition:all .15s;white-space:nowrap}
+.chip:hover{background:var(--press)}
+.chip.on{background:var(--brand);border-color:var(--brand);color:#fff}
+[data-theme="dark"] .chip.on{color:#0d1319}
+.chip .n{font-family:var(--mono);font-size:11px;opacity:.7;margin-left:4px}
+
+/* ===== timeline ===== */
+.day{margin-top:18px}
+.day-head{display:flex;align-items:baseline;gap:10px;padding:10px 0;border-bottom:2px solid var(--ink);position:sticky;top:56px;background:var(--bg-0);z-index:10}
+.day-head h2{font-size:16px;font-weight:800}
+.day-head .wd{font-size:12.5px;color:var(--ink-3)}
+.day-head .cnt{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.day-head .today-tag{font-size:11px;font-weight:700;color:var(--brand);background:var(--brand-soft);border-radius:5px;padding:2px 7px}
+
+.rows{display:block}
+.row{position:relative;display:flex;gap:14px;padding:13px 0 13px 22px;border-bottom:1px solid var(--divider);cursor:pointer;transition:background .15s;border-radius:6px}
+.row:hover{background:var(--press)}
+.row .rail{position:absolute;left:5px;top:0;bottom:0;width:1px;background:var(--border)}
+.row .dot{position:absolute;left:2px;top:22px;width:7px;height:7px;border-radius:50%;background:var(--ink-3);flex-shrink:0}
+.row:hover .dot{background:var(--brand)}
+.row-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+.row-title{font-size:15.5px;font-weight:600;line-height:1.45;color:var(--ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.row:hover .row-title{color:var(--brand)}
+.row-orig{font-size:12px;color:var(--ink-3);line-height:1.4;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;font-style:normal}
+.row-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.src{font-size:12px;color:var(--ink-3);white-space:nowrap}
+.cat{font-size:11px;font-weight:600;color:var(--brand);background:var(--brand-soft);border-radius:5px;padding:1.5px 7px;white-space:nowrap}
+.author{font-size:11.5px;color:var(--ink-3)}
+.row-arrow{flex-shrink:0;align-self:center;color:var(--ink-3);opacity:0;transition:opacity .15s}
+.row:hover .row-arrow{opacity:1}
+.row.read .row-title{opacity:.5}
+.row.read .dot{background:var(--border)}
+
+.empty{padding:60px 0;text-align:center;color:var(--ink-3);font-size:14px}
+
+/* ===== footer ===== */
+.footer{margin:44px 0 34px;padding-top:16px;border-top:1px solid var(--border);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--ink-3)}
+.footer a{color:var(--brand);font-weight:600}
+
+@media (max-width:560px){
+  .hero h1{font-size:20px}
+  .logo span{display:none}
+  .btn .txt{display:none}
+  .btn{padding:0 9px}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap topbar-in">
+    <a class="logo" href="./"><b>旅行热点</b><span>TRAVEL HOT</span></a>
+    <label class="search">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" type="search" placeholder="搜索标题 / 来源 / 标签…" autocomplete="off">
+    </label>
+    <div class="top-actions">
+      <a class="btn" href="board.html" title="经典看板视图">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+        <span class="txt">经典看板</span>
+      </a>
+      <button class="btn icon-btn" id="themeBtn" title="切换深浅色">
+        <svg id="themeIcon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5 5l1.6 1.6M17.4 17.4 19 19M19 5l-1.6 1.6M6.6 17.4 5 19"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <h1>每日旅行情报</h1>
+    <div class="sub" id="stats">加载中…</div>
+  </section>
+  <nav class="chips" id="chips"></nav>
+  <div id="feed"></div>
+  <footer class="footer">
+    <div>数据每日自动更新 · 点击条目跳转原文</div>
+    <div><a href="board.html">经典看板视图 →</a></div>
+  </footer>
+</main>
+
+<script src="data.js"></script>
+<script>
+(function(){
+  "use strict";
+  var DATA = window.DASHBOARD_DATA || {updatedAt:"-",items:[]};
+  var ITEMS = DATA.items || [];
+
+  /* ---- theme ---- */
+  var root = document.documentElement;
+  function applyTheme(t){ root.setAttribute("data-theme", t); try{localStorage.setItem("th_theme",t);}catch(e){} }
+  var saved = null; try{ saved = localStorage.getItem("th_theme"); }catch(e){}
+  applyTheme(saved || (window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"));
+  document.getElementById("themeBtn").addEventListener("click", function(){
+    applyTheme(root.getAttribute("data-theme")==="dark" ? "light" : "dark");
+  });
+
+  /* ---- read state ---- */
+  var READ = {};
+  try{ READ = JSON.parse(localStorage.getItem("th_read")||"{}"); }catch(e){}
+  function markRead(id){ READ[id]=1; try{localStorage.setItem("th_read", JSON.stringify(READ));}catch(e){} }
+
+  /* ---- source groups ---- */
+  var GROUPS = [
+    {key:"all",   label:"全部",      test:function(){return true;}},
+    {key:"air",   label:"✈️ 民航",   test:function(d){return d.source==="CARNOC";}},
+    {key:"ll",    label:"🌐 常旅客", test:function(d){return d.source==="LOYALTYLOBBY";}},
+    {key:"card",  label:"💳 信用卡", test:function(d){return ["CMB","CITIC","BOCOM"].indexOf(d.source)>=0;}},
+    {key:"rail",  label:"🚄 铁路",   test:function(d){return d.source==="12306";}},
+    {key:"xhs",   label:"📕 小红书", test:function(d){return ["酒旅情报局","葱头的旅游羊毛","老鸭唐纳德","一只酒店旅行兔","嬉游小助理"].indexOf(d.source)>=0;}},
+    {key:"misc",  label:"📌 其他",   test:function(d){return ["CEIC","驻泰使馆","EARTHQUAKE"].indexOf(d.source)>=0;}}
+  ];
+  var state = {group:"all", q:"", unreadOnly:false};
+
+  /* ---- stats ---- */
+  var srcSet = {};
+  ITEMS.forEach(function(d){ srcSet[d.source]=1; });
+  document.getElementById("stats").innerHTML =
+    "更新于 <b>"+esc(DATA.updatedAt)+"</b> · 共 <b>"+ITEMS.length+"</b> 条 · <b>"+Object.keys(srcSet).length+"</b> 个来源";
+
+  /* ---- chips ---- */
+  var chipsEl = document.getElementById("chips");
+  GROUPS.forEach(function(g){
+    var n = ITEMS.filter(g.test).length;
+    if(g.key!=="all" && n===0) return;
+    var b = document.createElement("button");
+    b.className = "chip"+(state.group===g.key?" on":"");
+    b.dataset.key = g.key;
+    b.innerHTML = esc(g.label)+'<span class="n">'+n+"</span>";
+    b.addEventListener("click", function(){
+      state.group = g.key; render();
+      chipsEl.querySelectorAll(".chip").forEach(function(c){c.classList.toggle("on", c.dataset.key===g.key);});
+    });
+    chipsEl.appendChild(b);
+  });
+  var ub = document.createElement("button");
+  ub.className = "chip"; ub.style.marginLeft = "auto";
+  ub.textContent = "只看未读";
+  ub.addEventListener("click", function(){
+    state.unreadOnly = !state.unreadOnly;
+    ub.classList.toggle("on", state.unreadOnly); render();
+  });
+  chipsEl.appendChild(ub);
+
+  /* ---- search ---- */
+  var qt;
+  document.getElementById("q").addEventListener("input", function(e){
+    clearTimeout(qt);
+    qt = setTimeout(function(){ state.q = e.target.value.trim().toLowerCase(); render(); }, 160);
+  });
+
+  function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
+  var WD = ["星期日","星期一","星期二","星期三","星期四","星期五","星期六"];
+  function dayLabel(ds){
+    var p = ds.split("-"); if(p.length<3) return ds;
+    return parseInt(p[1],10)+"月"+parseInt(p[2],10)+"日";
+  }
+  function weekday(ds){
+    var d = new Date(ds+"T00:00:00"); return isNaN(d)?"":WD[d.getDay()];
+  }
+  function isToday(ds){
+    var t = new Date();
+    var s = t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0");
+    return ds===s;
+  }
+
+  function render(){
+    var feed = document.getElementById("feed");
+    feed.innerHTML = "";
+    var g = GROUPS.filter(function(x){return x.key===state.group;})[0] || GROUPS[0];
+    var list = ITEMS.filter(function(d){
+      if(!g.test(d)) return false;
+      if(state.unreadOnly && READ[d.id]) return false;
+      if(state.q){
+        var hay = (d.title+" "+(d.originalTitle||"")+" "+(d.sourceLabel||"")+" "+(d.category||"")+" "+(d.author||"")).toLowerCase();
+        if(hay.indexOf(state.q)<0) return false;
+      }
+      return true;
+    });
+    if(!list.length){
+      feed.innerHTML = '<div class="empty">没有符合条件的条目</div>';
+      return;
+    }
+    var byDay = {}, order = [];
+    list.forEach(function(d){
+      var k = String(d.sortTime||"未知日期").slice(0,10);
+      if(!byDay[k]){ byDay[k]=[]; order.push(k); }
+      byDay[k].push(d);
+    });
+    order.sort().reverse();
+    order.forEach(function(day){
+      var items = byDay[day];
+      var sec = document.createElement("section");
+      sec.className = "day";
+      var head = '<div class="day-head"><h2>'+esc(dayLabel(day))+"</h2>"+
+        '<span class="wd">'+esc(weekday(day))+"</span>"+
+        (isToday(day)?'<span class="today-tag">今天</span>':"")+
+        '<span class="cnt">'+items.length+" 条</span></div>";
+      sec.innerHTML = head + '<div class="rows"></div>';
+      var rows = sec.querySelector(".rows");
+      items.forEach(function(d){
+        var a = document.createElement("a");
+        a.className = "row"+(READ[d.id]?" read":"");
+        a.href = d.href || "#";
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        var meta = '<span class="src">'+esc(d.sourceLabel||d.source||"")+"</span>";
+        if(d.category) meta += '<span class="cat">'+esc(d.category)+"</span>";
+        if(d.author) meta += '<span class="author">'+esc(d.author)+"</span>";
+        a.innerHTML =
+          '<span class="rail"></span><span class="dot"></span>'+
+          '<div class="row-body">'+
+            '<div class="row-title">'+esc(d.title)+"</div>"+
+            (d.originalTitle && d.originalTitle!==d.title ? '<div class="row-orig">'+esc(d.originalTitle)+"</div>" : "")+
+            '<div class="row-meta">'+meta+"</div>"+
+          "</div>"+
+          '<svg class="row-arrow" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17 17 7M9 7h8v8"/></svg>';
+        a.addEventListener("click", function(){ markRead(d.id); a.classList.add("read"); });
+        rows.appendChild(a);
+      });
+      feed.appendChild(sec);
+    });
+  }
+  render();
+})();
+</script>
+</body>
+</html>
